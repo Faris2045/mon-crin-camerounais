@@ -14,7 +14,83 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      comments: {
+        Row: {
+          author: string
+          author_id: string
+          created_at: string
+          id: string
+          message_id: string
+          text: string
+        }
+        Insert: {
+          author: string
+          author_id: string
+          created_at?: string
+          id?: string
+          message_id: string
+          text: string
+        }
+        Update: {
+          author?: string
+          author_id?: string
+          created_at?: string
+          id?: string
+          message_id?: string
+          text?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comments_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      messages: {
+        Row: {
+          author: string
+          author_id: string
+          created_at: string
+          expires_at: string
+          id: string
+          lat: number
+          liked_by: string[]
+          likes: number
+          lng: number
+          reported: boolean
+          text: string
+        }
+        Insert: {
+          author: string
+          author_id: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          lat: number
+          liked_by?: string[]
+          likes?: number
+          lng: number
+          reported?: boolean
+          text: string
+        }
+        Update: {
+          author?: string
+          author_id?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          lat?: number
+          liked_by?: string[]
+          likes?: number
+          lng?: number
+          reported?: boolean
+          text?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
