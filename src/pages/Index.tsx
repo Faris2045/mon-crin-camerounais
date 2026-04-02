@@ -7,7 +7,7 @@ import ComposeSheet from "@/components/ComposeSheet";
 import MessageDetail from "@/components/MessageDetail";
 import BottomNav, { Tab } from "@/components/BottomNav";
 import SettingsPanel from "@/components/SettingsPanel";
-import logo from "@/assets/logo.jpg";
+
 import { useToast } from "@/hooks/use-toast";
 
 export default function Index() {
