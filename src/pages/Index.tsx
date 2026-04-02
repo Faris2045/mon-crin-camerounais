@@ -33,8 +33,7 @@ export default function Index() {
       <header className="bg-primary text-primary-foreground px-4 py-3 safe-top sticky top-0 z-30">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <img src={logo} alt="Kongossa Net" className="w-8 h-8 rounded-lg object-cover" />
-            <h1 className="text-lg font-extrabold tracking-tight">Kongossa Net</h1>
+            <h1 className="text-xl font-extrabold tracking-tight uppercase">KONGOSSA</h1>
           </div>
           <div className="flex items-center gap-1 text-primary-foreground/80 text-xs">
             <MapPin className="w-3 h-3" />
