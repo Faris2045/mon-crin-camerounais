@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { getAreaName, getAreaById, type Area } from "@/components/AreaSelector";
 
 export interface KongossaComment {
   id: string;
@@ -25,26 +26,27 @@ export interface KongossaMessage {
   lng: number;
 }
 
-const ANONYMOUS_NAMES = [
-  "Passager", "Voisin proche", "Curieux", "Bavard", "Observateur",
-  "Mystérieux", "Flâneur", "Inconnu", "Ami secret", "Explorateur",
-  "Aventurier", "Rêveur", "Philosophe", "Comique", "Sage",
-];
-
 function generateUserId(): string {
   return "user_" + Math.random().toString(36).substr(2, 9);
 }
 
-function generateUsername(): string {
-  const name = ANONYMOUS_NAMES[Math.floor(Math.random() * ANONYMOUS_NAMES.length)];
-  const num = Math.floor(Math.random() * 99) + 1;
-  return `${name} ${num}`;
-}
-
-function getUserData(): { id: string; name: string } {
+function getUserData(): { id: string; name: string; areaId: string; areaTimestamp: number } {
   const stored = localStorage.getItem("kongossa_user");
-  if (stored) return JSON.parse(stored);
-  const data = { id: generateUserId(), name: generateUsername() };
+  if (stored) {
+    const parsed = JSON.parse(stored);
+    if (!parsed.areaId) {
+      parsed.areaId = "public";
+      parsed.areaTimestamp = Date.now();
+      localStorage.setItem("kongossa_user", JSON.stringify(parsed));
+    }
+    return parsed;
+  }
+  const data = {
+    id: generateUserId(),
+    name: getAreaName("public"),
+    areaId: "public",
+    areaTimestamp: Date.now(),
+  };
   localStorage.setItem("kongossa_user", JSON.stringify(data));
   return data;
 }
@@ -60,15 +62,60 @@ function calculateDistance(lat1: number, lng1: number, lat2: number, lng2: numbe
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
+const AREA_PROMPT_INTERVAL = 10 * 60 * 1000; // 10 minutes
+
 export function useKongossaStore() {
-  const [user] = useState(getUserData);
+  const [user, setUser] = useState(getUserData);
   const [messages, setMessages] = useState<KongossaMessage[]>([]);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [radius, setRadius] = useState(1000);
   const [locationError, setLocationError] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [showAreaPrompt, setShowAreaPrompt] = useState(false);
+  const [needsInitialArea, setNeedsInitialArea] = useState(false);
   const locationRef = useRef(userLocation);
   locationRef.current = userLocation;
+
+  // Check if user needs initial area selection
+  useEffect(() => {
+    const stored = localStorage.getItem("kongossa_user");
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      if (!parsed.areaId || parsed.areaId === "public") {
+        // First time or default — show selector
+        setNeedsInitialArea(true);
+      }
+    } else {
+      setNeedsInitialArea(true);
+    }
+  }, []);
+
+  // Auto-prompt area change every 10 minutes
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const timeSinceLastChange = Date.now() - user.areaTimestamp;
+      if (timeSinceLastChange >= AREA_PROMPT_INTERVAL) {
+        setShowAreaPrompt(true);
+      }
+    }, 60000); // Check every minute
+    return () => clearInterval(interval);
+  }, [user.areaTimestamp]);
+
+  const changeArea = useCallback((area: Area) => {
+    const newName = getAreaName(area.id);
+    const updated = { ...user, name: newName, areaId: area.id, areaTimestamp: Date.now() };
+    setUser(updated);
+    localStorage.setItem("kongossa_user", JSON.stringify(updated));
+    setShowAreaPrompt(false);
+    setNeedsInitialArea(false);
+  }, [user]);
+
+  const dismissAreaPrompt = useCallback(() => {
+    const updated = { ...user, areaTimestamp: Date.now() };
+    setUser(updated);
+    localStorage.setItem("kongossa_user", JSON.stringify(updated));
+    setShowAreaPrompt(false);
+  }, [user]);
 
   // Get location
   useEffect(() => {
@@ -105,7 +152,6 @@ export function useKongossaStore() {
       return;
     }
 
-    // Fetch all comments
     const messageIds = msgData.map((m) => m.id);
     const { data: commentData } = messageIds.length > 0
       ? await supabase.from("comments").select("*").in("message_id", messageIds).order("created_at", { ascending: true })
@@ -143,7 +189,6 @@ export function useKongossaStore() {
     setLoading(false);
   }, []);
 
-  // Load messages when location ready
   useEffect(() => {
     if (!userLocation) return;
     fetchMessages();
@@ -226,5 +271,9 @@ export function useKongossaStore() {
     addComment,
     reportMessage,
     loading,
+    showAreaPrompt,
+    needsInitialArea,
+    changeArea,
+    dismissAreaPrompt,
   };
 }
