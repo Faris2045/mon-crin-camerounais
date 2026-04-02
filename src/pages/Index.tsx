@@ -7,7 +7,8 @@ import ComposeSheet from "@/components/ComposeSheet";
 import MessageDetail from "@/components/MessageDetail";
 import BottomNav, { Tab } from "@/components/BottomNav";
 import SettingsPanel from "@/components/SettingsPanel";
-
+import AreaSelector from "@/components/AreaSelector";
+import SplashScreen from "@/components/SplashScreen";
 import { useToast } from "@/hooks/use-toast";
 
 export default function Index() {
@@ -15,6 +16,8 @@ export default function Index() {
   const [tab, setTab] = useState<Tab>("feed");
   const [composeOpen, setComposeOpen] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [showSplash, setShowSplash] = useState(true);
+  const [manualAreaOpen, setManualAreaOpen] = useState(false);
   const { toast } = useToast();
 
   const selectedMessage = store.messages.find((m) => m.id === selectedId) ||
@@ -27,14 +30,31 @@ export default function Index() {
 
   const currentMessages = tab === "hot" ? store.hotMessages : store.messages;
 
+  const areaOpen = store.needsInitialArea || store.showAreaPrompt || manualAreaOpen;
+
   return (
     <div className="min-h-screen bg-background pb-20">
+      {/* Splash Screen */}
+      <AnimatePresence>
+        {showSplash && <SplashScreen onFinish={() => setShowSplash(false)} />}
+      </AnimatePresence>
+
+      {/* Area Selector */}
+      <AreaSelector
+        open={areaOpen && !showSplash}
+        onSelect={(area) => {
+          store.changeArea(area);
+          setManualAreaOpen(false);
+          const areaLabel = area.label;
+          toast({ title: `${area.emoji} ${areaLabel}`, description: `Tu es maintenant "${store.user.name}"` });
+        }}
+        currentAreaId={store.user.areaId}
+      />
+
       {/* Header */}
       <header className="bg-primary text-primary-foreground px-4 py-3 safe-top sticky top-0 z-30">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <h1 className="text-xl font-extrabold tracking-tight uppercase">KONGOSSA</h1>
-          </div>
+          <h1 className="text-xl font-black tracking-widest">KONGOSSA</h1>
           <div className="flex items-center gap-1 text-primary-foreground/80 text-xs">
             <MapPin className="w-3 h-3" />
             <span className="font-semibold">{store.radius >= 1000 ? `${store.radius / 1000}km` : `${store.radius}m`}</span>
@@ -47,8 +67,10 @@ export default function Index() {
         {tab === "settings" ? (
           <SettingsPanel
             username={store.user.name}
+            areaId={store.user.areaId}
             radius={store.radius}
             onRadiusChange={store.setRadius}
+            onChangeArea={() => setManualAreaOpen(true)}
             locationError={store.locationError}
           />
         ) : (
