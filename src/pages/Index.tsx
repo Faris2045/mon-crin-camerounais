@@ -6,7 +6,7 @@ import MessageCard from "@/components/MessageCard";
 import ComposeSheet from "@/components/ComposeSheet";
 import MessageDetail from "@/components/MessageDetail";
 import BottomNav, { Tab } from "@/components/BottomNav";
-import SettingsPanel from "@/components/SettingsPanel";
+import ProfilePanel from "@/components/ProfilePanel";
 import AreaSelector from "@/components/AreaSelector";
 import SplashScreen from "@/components/SplashScreen";
 import { useToast } from "@/hooks/use-toast";
