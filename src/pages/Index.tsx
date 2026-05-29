@@ -107,7 +107,7 @@ export default function Index() {
                   onLike={store.toggleLike}
                   onTap={setSelectedId}
                   onReport={handleReport}
-                  isHot={msg.likes >= 10}
+                  isHot={msg.likes + msg.comments.length * 2 >= 5}
                 />
               ))
             )}
