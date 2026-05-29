@@ -6,7 +6,7 @@ import MessageCard from "@/components/MessageCard";
 import ComposeSheet from "@/components/ComposeSheet";
 import MessageDetail from "@/components/MessageDetail";
 import BottomNav, { Tab } from "@/components/BottomNav";
-import SettingsPanel from "@/components/SettingsPanel";
+import ProfilePanel from "@/components/ProfilePanel";
 import AreaSelector from "@/components/AreaSelector";
 import SplashScreen from "@/components/SplashScreen";
 import { useToast } from "@/hooks/use-toast";
@@ -65,10 +65,12 @@ export default function Index() {
       {/* Content */}
       <main className="px-4 pt-4">
         {tab === "settings" ? (
-          <SettingsPanel
+          <ProfilePanel
             username={store.user.name}
             areaId={store.user.areaId}
             radius={store.radius}
+            stats={store.stats}
+            myMessages={store.myMessages}
             onRadiusChange={store.setRadius}
             onChangeArea={() => setManualAreaOpen(true)}
             locationError={store.locationError}
@@ -105,7 +107,7 @@ export default function Index() {
                   onLike={store.toggleLike}
                   onTap={setSelectedId}
                   onReport={handleReport}
-                  isHot={msg.likes >= 10}
+                  isHot={msg.likes + msg.comments.length * 2 >= 5}
                 />
               ))
             )}

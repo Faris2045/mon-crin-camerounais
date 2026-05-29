@@ -252,16 +252,36 @@ export function useKongossaStore() {
     if (error) console.error("Error reporting:", error);
   }, []);
 
-  const feedMessages = messages
-    .filter((m) => m.expiresAt > Date.now() && !m.reported && m.distance <= radius)
+  // Engagement score: each like = 1 point, each comment = 2 points
+  const TREND_THRESHOLD = 5; // points needed for a kongossa to "break out" of its local radius
+  const engagement = (m: KongossaMessage) => m.likes + m.comments.length * 2;
+
+  const activeMessages = messages.filter((m) => m.expiresAt > Date.now() && !m.reported);
+
+  // Local feed: kongossas within the radius, OR popular ones that have escaped the zone
+  const feedMessages = activeMessages
+    .filter((m) => m.distance <= radius || engagement(m) >= TREND_THRESHOLD)
     .sort((a, b) => b.timestamp - a.timestamp);
 
-  const hotMessages = [...feedMessages].sort((a, b) => b.likes - a.likes).filter((m) => m.likes >= 10);
+  // Tendances: the most engaging kongossas regardless of distance
+  const hotMessages = [...activeMessages]
+    .filter((m) => engagement(m) >= TREND_THRESHOLD)
+    .sort((a, b) => engagement(b) - engagement(a));
+
+  // Profile stats for the current user
+  const myMessages = activeMessages.filter((m) => m.authorId === user.id);
+  const stats = {
+    posts: myMessages.length,
+    likesReceived: myMessages.reduce((sum, m) => sum + m.likes, 0),
+    commentsReceived: myMessages.reduce((sum, m) => sum + m.comments.length, 0),
+  };
 
   return {
     user,
     messages: feedMessages,
     hotMessages,
+    myMessages,
+    stats,
     userLocation,
     locationError,
     radius,
