@@ -65,10 +65,12 @@ export default function Index() {
       {/* Content */}
       <main className="px-4 pt-4">
         {tab === "settings" ? (
-          <SettingsPanel
+          <ProfilePanel
             username={store.user.name}
             areaId={store.user.areaId}
             radius={store.radius}
+            stats={store.stats}
+            myMessages={store.myMessages}
             onRadiusChange={store.setRadius}
             onChangeArea={() => setManualAreaOpen(true)}
             locationError={store.locationError}
