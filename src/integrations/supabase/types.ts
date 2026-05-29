@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      alerts: {
+        Row: {
+          author_id: string
+          author_name: string
+          created_at: string
+          id: string
+          lat: number
+          lng: number
+          message: string | null
+          resolved_at: string | null
+          status: string
+        }
+        Insert: {
+          author_id: string
+          author_name: string
+          created_at?: string
+          id?: string
+          lat: number
+          lng: number
+          message?: string | null
+          resolved_at?: string | null
+          status?: string
+        }
+        Update: {
+          author_id?: string
+          author_name?: string
+          created_at?: string
+          id?: string
+          lat?: number
+          lng?: number
+          message?: string | null
+          resolved_at?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
       comments: {
         Row: {
           author: string
@@ -48,6 +84,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      identity_traces: {
+        Row: {
+          author_id: string
+          created_at: string
+          full_name: string
+          id: string
+          phone: string
+        }
+        Insert: {
+          author_id: string
+          created_at?: string
+          full_name: string
+          id?: string
+          phone: string
+        }
+        Update: {
+          author_id?: string
+          created_at?: string
+          full_name?: string
+          id?: string
+          phone?: string
+        }
+        Relationships: []
       }
       messages: {
         Row: {
