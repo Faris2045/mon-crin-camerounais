@@ -1,4 +1,4 @@
-import { Home, Flame, Sliders } from "lucide-react";
+import { Home, Flame, User } from "lucide-react";
 
 export type Tab = "feed" | "hot" | "settings";
 
