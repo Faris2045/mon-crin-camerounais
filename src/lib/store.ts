@@ -26,26 +26,51 @@ export interface KongossaMessage {
   lng: number;
 }
 
+export interface KongossaAlert {
+  id: string;
+  authorId: string;
+  authorName: string;
+  message: string | null;
+  lat: number;
+  lng: number;
+  status: string;
+  timestamp: number;
+  distance: number;
+}
+
+export interface UserData {
+  id: string;
+  name: string;
+  areaId: string;
+  areaTimestamp: number;
+  fullName: string;
+  phone: string;
+}
+
 function generateUserId(): string {
   return "user_" + Math.random().toString(36).substr(2, 9);
 }
 
-function getUserData(): { id: string; name: string; areaId: string; areaTimestamp: number } {
+function getUserData(): UserData {
   const stored = localStorage.getItem("kongossa_user");
   if (stored) {
     const parsed = JSON.parse(stored);
     if (!parsed.areaId) {
       parsed.areaId = "public";
       parsed.areaTimestamp = Date.now();
-      localStorage.setItem("kongossa_user", JSON.stringify(parsed));
     }
+    if (parsed.fullName === undefined) parsed.fullName = "";
+    if (parsed.phone === undefined) parsed.phone = "";
+    localStorage.setItem("kongossa_user", JSON.stringify(parsed));
     return parsed;
   }
-  const data = {
+  const data: UserData = {
     id: generateUserId(),
     name: getAreaName("public"),
     areaId: "public",
     areaTimestamp: Date.now(),
+    fullName: "",
+    phone: "",
   };
   localStorage.setItem("kongossa_user", JSON.stringify(data));
   return data;
@@ -67,6 +92,7 @@ const AREA_PROMPT_INTERVAL = 10 * 60 * 1000; // 10 minutes
 export function useKongossaStore() {
   const [user, setUser] = useState(getUserData);
   const [messages, setMessages] = useState<KongossaMessage[]>([]);
+  const [alerts, setAlerts] = useState<KongossaAlert[]>([]);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [radius, setRadius] = useState(1000);
   const [locationError, setLocationError] = useState(false);
@@ -76,13 +102,14 @@ export function useKongossaStore() {
   const locationRef = useRef(userLocation);
   locationRef.current = userLocation;
 
-  // Check if user needs initial area selection
+  const needsIdentity = !user.fullName || !user.phone;
+
+  // Check if user needs initial area selection (only after identity is set)
   useEffect(() => {
     const stored = localStorage.getItem("kongossa_user");
     if (stored) {
       const parsed = JSON.parse(stored);
       if (!parsed.areaId || parsed.areaId === "public") {
-        // First time or default — show selector
         setNeedsInitialArea(true);
       }
     } else {
@@ -97,9 +124,22 @@ export function useKongossaStore() {
       if (timeSinceLastChange >= AREA_PROMPT_INTERVAL) {
         setShowAreaPrompt(true);
       }
-    }, 60000); // Check every minute
+    }, 60000);
     return () => clearInterval(interval);
   }, [user.areaTimestamp]);
+
+  // Save the user's real identity (for police tracing) — stored privately
+  const saveIdentity = useCallback(async (fullName: string, phone: string) => {
+    const updated = { ...user, fullName, phone };
+    setUser(updated);
+    localStorage.setItem("kongossa_user", JSON.stringify(updated));
+    const { error } = await supabase.from("identity_traces").insert({
+      author_id: user.id,
+      full_name: fullName,
+      phone,
+    });
+    if (error) console.error("Error saving identity:", error);
+  }, [user]);
 
   const changeArea = useCallback((area: Area) => {
     const newName = getAreaName(area.id);
@@ -117,21 +157,25 @@ export function useKongossaStore() {
     setShowAreaPrompt(false);
   }, [user]);
 
-  // Get location
+  // Get location — watch continuously so urgency alerts have a fresh position
   useEffect(() => {
     if (!navigator.geolocation) {
       setLocationError(true);
       setUserLocation({ lat: 4.0511, lng: 9.7679 });
       return;
     }
-    navigator.geolocation.getCurrentPosition(
-      (pos) => setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+    const watchId = navigator.geolocation.watchPosition(
+      (pos) => {
+        setLocationError(false);
+        setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+      },
       () => {
         setLocationError(true);
-        setUserLocation({ lat: 4.0511, lng: 9.7679 });
+        setUserLocation((prev) => prev ?? { lat: 4.0511, lng: 9.7679 });
       },
-      { enableHighAccuracy: true }
+      { enableHighAccuracy: true, maximumAge: 10000 }
     );
+    return () => navigator.geolocation.clearWatch(watchId);
   }, []);
 
   // Fetch messages from Supabase
@@ -189,10 +233,39 @@ export function useKongossaStore() {
     setLoading(false);
   }, []);
 
+  // Fetch active SOS alerts
+  const fetchAlerts = useCallback(async () => {
+    if (!locationRef.current) return;
+    const loc = locationRef.current;
+    const { data, error } = await supabase
+      .from("alerts")
+      .select("*")
+      .eq("status", "active")
+      .order("created_at", { ascending: false });
+    if (error || !data) {
+      console.error("Error fetching alerts:", error);
+      return;
+    }
+    setAlerts(
+      data.map((a) => ({
+        id: a.id,
+        authorId: a.author_id,
+        authorName: a.author_name,
+        message: a.message,
+        lat: a.lat,
+        lng: a.lng,
+        status: a.status,
+        timestamp: new Date(a.created_at).getTime(),
+        distance: calculateDistance(loc.lat, loc.lng, a.lat, a.lng),
+      }))
+    );
+  }, []);
+
   useEffect(() => {
     if (!userLocation) return;
     fetchMessages();
-  }, [userLocation, fetchMessages]);
+    fetchAlerts();
+  }, [userLocation, fetchMessages, fetchAlerts]);
 
   // Real-time subscriptions
   useEffect(() => {
@@ -200,18 +273,15 @@ export function useKongossaStore() {
 
     const channel = supabase
       .channel("kongossa-realtime")
-      .on("postgres_changes", { event: "*", schema: "public", table: "messages" }, () => {
-        fetchMessages();
-      })
-      .on("postgres_changes", { event: "*", schema: "public", table: "comments" }, () => {
-        fetchMessages();
-      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "messages" }, () => fetchMessages())
+      .on("postgres_changes", { event: "*", schema: "public", table: "comments" }, () => fetchMessages())
+      .on("postgres_changes", { event: "*", schema: "public", table: "alerts" }, () => fetchAlerts())
       .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [userLocation, fetchMessages]);
+  }, [userLocation, fetchMessages, fetchAlerts]);
 
   const addMessage = useCallback(async (text: string) => {
     if (!userLocation) return;
@@ -224,6 +294,31 @@ export function useKongossaStore() {
     });
     if (error) console.error("Error adding message:", error);
   }, [user, userLocation]);
+
+  // Trigger an emergency SOS alert at the current location
+  const sendAlert = useCallback(async (message: string) => {
+    if (!userLocation) return false;
+    const { error } = await supabase.from("alerts").insert({
+      author_id: user.id,
+      author_name: user.name,
+      message: message || null,
+      lat: userLocation.lat,
+      lng: userLocation.lng,
+    });
+    if (error) {
+      console.error("Error sending alert:", error);
+      return false;
+    }
+    return true;
+  }, [user, userLocation]);
+
+  const resolveAlert = useCallback(async (alertId: string) => {
+    const { error } = await supabase
+      .from("alerts")
+      .update({ status: "resolved", resolved_at: new Date().toISOString() })
+      .eq("id", alertId);
+    if (error) console.error("Error resolving alert:", error);
+  }, []);
 
   const toggleLike = useCallback(async (messageId: string) => {
     const msg = messages.find((m) => m.id === messageId);
@@ -253,22 +348,19 @@ export function useKongossaStore() {
   }, []);
 
   // Engagement score: each like = 1 point, each comment = 2 points
-  const TREND_THRESHOLD = 5; // points needed for a kongossa to "break out" of its local radius
+  const TREND_THRESHOLD = 5;
   const engagement = (m: KongossaMessage) => m.likes + m.comments.length * 2;
 
   const activeMessages = messages.filter((m) => m.expiresAt > Date.now() && !m.reported);
 
-  // Local feed: kongossas within the radius, OR popular ones that have escaped the zone
   const feedMessages = activeMessages
     .filter((m) => m.distance <= radius || engagement(m) >= TREND_THRESHOLD)
     .sort((a, b) => b.timestamp - a.timestamp);
 
-  // Tendances: the most engaging kongossas regardless of distance
   const hotMessages = [...activeMessages]
     .filter((m) => engagement(m) >= TREND_THRESHOLD)
     .sort((a, b) => engagement(b) - engagement(a));
 
-  // Profile stats for the current user
   const myMessages = activeMessages.filter((m) => m.authorId === user.id);
   const stats = {
     posts: myMessages.length,
@@ -276,12 +368,22 @@ export function useKongossaStore() {
     commentsReceived: myMessages.reduce((sum, m) => sum + m.comments.length, 0),
   };
 
+  // Alerts sorted by proximity — urgency overrides the radius (everyone sees them)
+  const sortedAlerts = [...alerts].sort((a, b) => a.distance - b.distance);
+  const myActiveAlert = sortedAlerts.find((a) => a.authorId === user.id);
+
   return {
     user,
+    needsIdentity,
+    saveIdentity,
     messages: feedMessages,
     hotMessages,
     myMessages,
     stats,
+    alerts: sortedAlerts,
+    myActiveAlert,
+    sendAlert,
+    resolveAlert,
     userLocation,
     locationError,
     radius,
