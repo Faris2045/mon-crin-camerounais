@@ -11,7 +11,7 @@ export default function BottomNav({ active, onChange }: Props) {
   const items: { tab: Tab; icon: typeof Home; label: string }[] = [
     { tab: "feed", icon: Home, label: "Accueil" },
     { tab: "hot", icon: Flame, label: "Tendances" },
-    { tab: "settings", icon: Sliders, label: "Réglages" },
+    { tab: "settings", icon: User, label: "Profil" },
   ];
 
   return (
