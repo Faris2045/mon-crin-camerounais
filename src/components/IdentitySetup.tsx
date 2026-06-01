@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { ShieldCheck, User, Phone, Lock } from "lucide-react";
+import { User, Phone, Lock } from "lucide-react";
+import logo from "@/assets/kongossa-logo.png";
 
 interface Props {
   open: boolean;
@@ -37,14 +38,12 @@ export default function IdentitySetup({ open, onSubmit }: Props) {
           className="max-w-sm w-full mx-auto"
         >
           <div className="text-center mb-7">
-            <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
-              <ShieldCheck className="w-8 h-8 text-primary" />
-            </div>
-            <h1 className="text-2xl font-black text-foreground">Crée ton identité</h1>
+            <img src={logo} alt="KONGOSSA" className="w-20 h-20 object-contain mx-auto mb-4" />
+            <h1 className="text-2xl font-black text-foreground tracking-wide">IDENTITÉ CONFIDENTIELLE</h1>
             <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
-              Tu restes <span className="font-bold text-foreground">anonyme</span> auprès des autres
-              utilisateurs. Ces informations sont privées et servent uniquement aux autorités en
-              cas de violence ou d'acte criminel.
+              Votre identité n'est <span className="font-bold text-foreground">jamais affichée</span> aux autres
+              utilisateurs. Elle sert uniquement à lutter contre les faux comptes, les abus et les activités
+              illégales.
             </p>
           </div>
 

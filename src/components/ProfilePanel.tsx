@@ -144,7 +144,9 @@ export default function ProfilePanel({
 
       <div className="mt-8 text-center">
         <p className="text-xs font-bold text-primary/60">KONGOSSA v1.0</p>
-        <p className="text-[10px] text-muted-foreground mt-0.5">Ton réseau local anonyme 🇨🇲</p>
+        <p className="text-[10px] text-muted-foreground mt-0.5 flex items-center justify-center gap-1">
+          <MapPin className="w-3 h-3" /> Les infos de proximité, en temps réel
+        </p>
       </div>
     </div>
   );

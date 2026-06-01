@@ -129,11 +129,13 @@ export default function Index() {
             {currentMessages.length === 0 ? (
               <div className="text-center py-16">
                 <Megaphone className="w-12 h-12 text-muted-foreground/30 mx-auto mb-3" />
-                <p className="text-muted-foreground font-semibold">
-                  {tab === "hot" ? "Pas encore de kongossa chaud 🔥" : "Aucun kongossa autour de toi"}
+                <p className="text-foreground font-extrabold uppercase tracking-wide">
+                  {tab === "hot" ? "Les sujets populaires apparaîtront ici" : "Sois le premier à informer ta communauté"}
                 </p>
-                <p className="text-muted-foreground text-sm mt-1">
-                  {tab === "hot" ? "Les messages populaires apparaîtront ici" : "Sois le premier à lancer un kongossa!"}
+                <p className="text-muted-foreground text-sm mt-1.5">
+                  {tab === "hot"
+                    ? "Les kongossas qui font réagir grimpent automatiquement ici"
+                    : "Balance ton kongossa et fais vibrer ton quartier 📢"}
                 </p>
               </div>
             ) : (
