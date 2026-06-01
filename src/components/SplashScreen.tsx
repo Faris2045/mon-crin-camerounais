@@ -52,7 +52,7 @@ export default function SplashScreen({ onFinish }: Props) {
           initial={{ width: 0 }}
           animate={{ width: 120 }}
           transition={{ delay: 1.2, duration: 0.8, ease: "easeInOut" }}
-          className="h-1 bg-primary-foreground/30 rounded-full mt-6"
+          className="h-1 bg-white/30 rounded-full mt-6"
           onAnimationComplete={onFinish}
         />
       </motion.div>
@@ -61,9 +61,9 @@ export default function SplashScreen({ onFinish }: Props) {
         initial={{ opacity: 0 }}
         animate={{ opacity: 0.5 }}
         transition={{ delay: 1 }}
-        className="absolute bottom-8 text-primary-foreground/40 text-xs font-bold"
+        className="absolute bottom-8 text-white/40 text-xs font-bold"
       >
-        🇨🇲 Made in Cameroun
+        📍 Informe · Alerte · Protège
       </motion.p>
     </motion.div>
   );
