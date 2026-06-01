@@ -96,7 +96,11 @@ export function useKongossaStore() {
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [radius, setRadius] = useState(1000);
   const [locationError, setLocationError] = useState(false);
+  const [accuracy, setAccuracy] = useState<number | null>(null);
+  const [permission, setPermission] = useState<"granted" | "denied" | "prompt" | "unsupported">("prompt");
   const [loading, setLoading] = useState(true);
+  const bestAccuracyRef = useRef<number>(Infinity);
+  const watchIdRef = useRef<number | null>(null);
   const [showAreaPrompt, setShowAreaPrompt] = useState(false);
   const [needsInitialArea, setNeedsInitialArea] = useState(false);
   const locationRef = useRef(userLocation);
