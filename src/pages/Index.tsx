@@ -112,6 +112,9 @@ export default function Index() {
             onRadiusChange={store.setRadius}
             onChangeArea={() => setManualAreaOpen(true)}
             locationError={store.locationError}
+            accuracy={store.accuracy}
+            permission={store.permission}
+            onRequestLocation={store.requestLocation}
           />
         ) : (
           <>
