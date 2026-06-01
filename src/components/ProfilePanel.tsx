@@ -41,8 +41,21 @@ export default function ProfilePanel({
   onRadiusChange,
   onChangeArea,
   locationError,
+  accuracy,
+  permission,
+  onRequestLocation,
 }: Props) {
   const area = getAreaById(areaId);
+  const accuracyLabel =
+    accuracy == null
+      ? null
+      : accuracy <= 20
+      ? "Excellente"
+      : accuracy <= 50
+      ? "Bonne"
+      : accuracy <= 150
+      ? "Moyenne"
+      : "Faible";
 
   return (
     <div className="pb-6">
