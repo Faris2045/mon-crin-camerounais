@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import logo from "@/assets/kongossa-logo.png";
 
 interface Props {
   onFinish: () => void;
