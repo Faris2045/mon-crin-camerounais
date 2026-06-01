@@ -12,6 +12,9 @@ interface Props {
   onRadiusChange: (r: number) => void;
   onChangeArea: () => void;
   locationError: boolean;
+  accuracy?: number | null;
+  permission?: "granted" | "denied" | "prompt" | "unsupported";
+  onRequestLocation?: () => void;
 }
 
 const RADIUS_OPTIONS = [
@@ -38,8 +41,21 @@ export default function ProfilePanel({
   onRadiusChange,
   onChangeArea,
   locationError,
+  accuracy,
+  permission,
+  onRequestLocation,
 }: Props) {
   const area = getAreaById(areaId);
+  const accuracyLabel =
+    accuracy == null
+      ? null
+      : accuracy <= 20
+      ? "Excellente"
+      : accuracy <= 50
+      ? "Bonne"
+      : accuracy <= 150
+      ? "Moyenne"
+      : "Faible";
 
   return (
     <div className="pb-6">
@@ -111,14 +127,67 @@ export default function ProfilePanel({
         </div>
       </div>
 
-      {locationError && (
-        <div className="bg-secondary/10 rounded-2xl p-4 text-sm text-foreground mb-4">
-          <p className="font-bold mb-1">📍 Localisation non disponible</p>
-          <p className="text-muted-foreground text-xs">
-            L'application utilise une position par défaut (Douala). Active la géolocalisation pour une meilleure expérience.
-          </p>
+      {/* GPS status */}
+      <div className="bg-card rounded-2xl p-4 shadow-sm mb-4">
+        <div className="flex items-center gap-2 mb-1">
+          <MapPin className="w-4 h-4 text-primary" />
+          <span className="font-bold text-sm text-foreground">Géolocalisation</span>
         </div>
-      )}
+
+        {permission === "denied" ? (
+          <p className="text-muted-foreground text-xs">
+            L'accès à ta position est bloqué. Autorise la localisation dans les réglages de ton
+            navigateur/téléphone pour KONGOSSA, puis réessaie.
+          </p>
+        ) : permission === "unsupported" ? (
+          <p className="text-muted-foreground text-xs">
+            Ton appareil ne supporte pas la géolocalisation. Position par défaut utilisée (Douala).
+          </p>
+        ) : locationError ? (
+          <p className="text-muted-foreground text-xs">
+            Position non disponible. L'app utilise une position par défaut (Douala).
+          </p>
+        ) : (
+          <div className="flex items-center justify-between">
+            <p className="text-muted-foreground text-xs">
+              Position active{accuracyLabel ? ` — précision ${accuracyLabel.toLowerCase()}` : ""}
+            </p>
+            {accuracy != null && (
+              <span
+                className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${
+                  accuracy <= 50
+                    ? "bg-primary/15 text-primary"
+                    : accuracy <= 150
+                    ? "bg-secondary/15 text-secondary"
+                    : "bg-destructive/15 text-destructive"
+                }`}
+              >
+                ±{accuracy}m
+              </span>
+            )}
+          </div>
+        )}
+
+        {onRequestLocation && permission !== "granted" && (
+          <button
+            onClick={onRequestLocation}
+            className="mt-3 w-full bg-primary text-primary-foreground font-bold text-sm py-2.5 rounded-xl active:scale-95 transition-transform flex items-center justify-center gap-2"
+          >
+            <MapPin className="w-4 h-4" />
+            Activer ma localisation
+          </button>
+        )}
+        {onRequestLocation && permission === "granted" && (
+          <button
+            onClick={onRequestLocation}
+            className="mt-3 w-full bg-background text-foreground font-bold text-sm py-2.5 rounded-xl active:scale-95 transition-transform flex items-center justify-center gap-2"
+          >
+            <RefreshCw className="w-4 h-4" />
+            Actualiser ma position
+          </button>
+        )}
+      </div>
+
 
       {/* My kongossas */}
       <h3 className="font-extrabold text-foreground text-sm mb-2 mt-6">Mes kongossas</h3>

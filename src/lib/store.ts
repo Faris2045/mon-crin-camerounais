@@ -96,7 +96,11 @@ export function useKongossaStore() {
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [radius, setRadius] = useState(1000);
   const [locationError, setLocationError] = useState(false);
+  const [accuracy, setAccuracy] = useState<number | null>(null);
+  const [permission, setPermission] = useState<"granted" | "denied" | "prompt" | "unsupported">("prompt");
   const [loading, setLoading] = useState(true);
+  const bestAccuracyRef = useRef<number>(Infinity);
+  const watchIdRef = useRef<number | null>(null);
   const [showAreaPrompt, setShowAreaPrompt] = useState(false);
   const [needsInitialArea, setNeedsInitialArea] = useState(false);
   const locationRef = useRef(userLocation);
@@ -157,34 +161,95 @@ export function useKongossaStore() {
     setShowAreaPrompt(false);
   }, [user]);
 
-  // Get location — watch continuously so urgency alerts have a fresh position
-  useEffect(() => {
+  // Start watching the GPS position — keeps the most accurate fix available
+  const startWatching = useCallback(() => {
     if (!navigator.geolocation) {
+      setPermission("unsupported");
       setLocationError(true);
-      setUserLocation({ lat: 4.0511, lng: 9.7679 });
+      setUserLocation((prev) => prev ?? { lat: 4.0511, lng: 9.7679 });
       return;
     }
-    const watchId = navigator.geolocation.watchPosition(
+    // Avoid stacking multiple watchers
+    if (watchIdRef.current !== null) {
+      navigator.geolocation.clearWatch(watchIdRef.current);
+    }
+    bestAccuracyRef.current = Infinity;
+    watchIdRef.current = navigator.geolocation.watchPosition(
       (pos) => {
-        // Ignore very imprecise fixes (e.g. coarse IP/WiFi) to keep the radius accurate
-        const acc = pos.coords.accuracy ?? 0;
-        if (acc > 0 && acc <= 200) {
-          setLocationError(false);
-          setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });
-        } else if (acc > 200) {
-          // Still accept it but mark accuracy as degraded
-          setLocationError(false);
+        const acc = pos.coords.accuracy ?? Infinity;
+        setPermission("granted");
+        setLocationError(false);
+        setAccuracy(Math.round(acc));
+        // Keep the most accurate reading; replace only when a fix is at least as precise
+        if (acc <= bestAccuracyRef.current + 1) {
+          bestAccuracyRef.current = acc;
           setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });
         }
       },
-      () => {
+      (err) => {
+        if (err.code === err.PERMISSION_DENIED) {
+          setPermission("denied");
+        }
         setLocationError(true);
         setUserLocation((prev) => prev ?? { lat: 4.0511, lng: 9.7679 });
       },
       { enableHighAccuracy: true, maximumAge: 0, timeout: 20000 }
     );
-    return () => navigator.geolocation.clearWatch(watchId);
   }, []);
+
+  // Explicitly (re)request location — used by the "activer la localisation" button
+  const requestLocation = useCallback(() => {
+    if (!navigator.geolocation) {
+      setPermission("unsupported");
+      setLocationError(true);
+      return;
+    }
+    setLocationError(false);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setPermission("granted");
+        setLocationError(false);
+        setAccuracy(Math.round(pos.coords.accuracy ?? 0));
+        bestAccuracyRef.current = pos.coords.accuracy ?? Infinity;
+        setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        startWatching();
+      },
+      (err) => {
+        if (err.code === err.PERMISSION_DENIED) setPermission("denied");
+        setLocationError(true);
+        setUserLocation((prev) => prev ?? { lat: 4.0511, lng: 9.7679 });
+      },
+      { enableHighAccuracy: true, maximumAge: 0, timeout: 20000 }
+    );
+  }, [startWatching]);
+
+  // Track permission state when the Permissions API is available
+  useEffect(() => {
+    if (!("permissions" in navigator) || !navigator.permissions?.query) return;
+    let permStatus: PermissionStatus | null = null;
+    navigator.permissions
+      .query({ name: "geolocation" as PermissionName })
+      .then((status) => {
+        permStatus = status;
+        setPermission(status.state as "granted" | "denied" | "prompt");
+        status.onchange = () => {
+          setPermission(status.state as "granted" | "denied" | "prompt");
+          if (status.state === "granted") startWatching();
+        };
+      })
+      .catch(() => {});
+    return () => {
+      if (permStatus) permStatus.onchange = null;
+    };
+  }, [startWatching]);
+
+  // Get location — watch continuously so urgency alerts have a fresh position
+  useEffect(() => {
+    startWatching();
+    return () => {
+      if (watchIdRef.current !== null) navigator.geolocation.clearWatch(watchIdRef.current);
+    };
+  }, [startWatching]);
 
   // Fetch messages from Supabase
   const fetchMessages = useCallback(async () => {
@@ -396,6 +461,9 @@ export function useKongossaStore() {
     resolveAlert,
     userLocation,
     locationError,
+    accuracy,
+    permission,
+    requestLocation,
     radius,
     setRadius,
     addMessage,
