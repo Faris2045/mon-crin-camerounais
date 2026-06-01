@@ -46,7 +46,7 @@ export default function ComposeSheet({ open, onClose, onSubmit }: Props) {
             <textarea
               value={text}
               onChange={(e) => setText(e.target.value.slice(0, maxChars))}
-              placeholder="Qu'est-ce qui se passe autour de toi?..."
+              placeholder="Balance ton kongossa..."
               className="w-full h-32 bg-background rounded-xl p-3 text-foreground text-[15px] resize-none focus:outline-none focus:ring-2 focus:ring-primary/30 placeholder:text-muted-foreground"
               autoFocus
             />
