@@ -38,7 +38,7 @@ export default function ComposeSheet({ open, onClose, onSubmit }: Props) {
             className="fixed bottom-0 left-0 right-0 bg-card rounded-t-3xl z-50 p-5 safe-bottom shadow-2xl"
           >
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-extrabold text-foreground">Lancer un kongossa 📢</h2>
+              <h2 className="text-lg font-extrabold text-foreground">Balance ton kongossa 📢</h2>
               <button onClick={onClose} className="text-muted-foreground p-1">
                 <X className="w-5 h-5" />
               </button>
