@@ -166,14 +166,22 @@ export function useKongossaStore() {
     }
     const watchId = navigator.geolocation.watchPosition(
       (pos) => {
-        setLocationError(false);
-        setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        // Ignore very imprecise fixes (e.g. coarse IP/WiFi) to keep the radius accurate
+        const acc = pos.coords.accuracy ?? 0;
+        if (acc > 0 && acc <= 200) {
+          setLocationError(false);
+          setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        } else if (acc > 200) {
+          // Still accept it but mark accuracy as degraded
+          setLocationError(false);
+          setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        }
       },
       () => {
         setLocationError(true);
         setUserLocation((prev) => prev ?? { lat: 4.0511, lng: 9.7679 });
       },
-      { enableHighAccuracy: true, maximumAge: 10000 }
+      { enableHighAccuracy: true, maximumAge: 0, timeout: 20000 }
     );
     return () => navigator.geolocation.clearWatch(watchId);
   }, []);
