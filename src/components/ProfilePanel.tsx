@@ -12,6 +12,9 @@ interface Props {
   onRadiusChange: (r: number) => void;
   onChangeArea: () => void;
   locationError: boolean;
+  accuracy?: number | null;
+  permission?: "granted" | "denied" | "prompt" | "unsupported";
+  onRequestLocation?: () => void;
 }
 
 const RADIUS_OPTIONS = [
