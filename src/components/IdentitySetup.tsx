@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { ShieldCheck, User, Phone, Lock } from "lucide-react";
+import logo from "@/assets/kongossa-logo.png";
 
 interface Props {
   open: boolean;
