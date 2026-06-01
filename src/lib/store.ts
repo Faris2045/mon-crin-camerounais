@@ -361,10 +361,12 @@ export function useKongossaStore() {
 
   const activeMessages = messages.filter((m) => m.expiresAt > Date.now() && !m.reported);
 
+  // ACCUEIL: strictly within the user's detection radius (proximity is the core promise)
   const feedMessages = activeMessages
-    .filter((m) => m.distance <= radius || engagement(m) >= TREND_THRESHOLD)
+    .filter((m) => m.distance <= radius)
     .sort((a, b) => b.timestamp - a.timestamp);
 
+  // TENDANCES: popular posts surface beyond the radius, ranked by engagement
   const hotMessages = [...activeMessages]
     .filter((m) => engagement(m) >= TREND_THRESHOLD)
     .sort((a, b) => engagement(b) - engagement(a));
