@@ -113,6 +113,7 @@ export default function Index() {
             onChangeArea={() => setManualAreaOpen(true)}
             locationError={store.locationError}
             accuracy={store.accuracy}
+            locating={store.locating}
             permission={store.permission}
             onRequestLocation={store.requestLocation}
           />
