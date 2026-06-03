@@ -97,6 +97,7 @@ export function useKongossaStore() {
   const [radius, setRadius] = useState(1000);
   const [locationError, setLocationError] = useState(false);
   const [accuracy, setAccuracy] = useState<number | null>(null);
+  const [locating, setLocating] = useState(false);
   const [permission, setPermission] = useState<"granted" | "denied" | "prompt" | "unsupported">("prompt");
   const [loading, setLoading] = useState(true);
   const bestAccuracyRef = useRef<number>(Infinity);
@@ -174,12 +175,15 @@ export function useKongossaStore() {
       navigator.geolocation.clearWatch(watchIdRef.current);
     }
     bestAccuracyRef.current = Infinity;
+    setLocating(true);
     watchIdRef.current = navigator.geolocation.watchPosition(
       (pos) => {
         const acc = pos.coords.accuracy ?? Infinity;
         setPermission("granted");
         setLocationError(false);
         setAccuracy(Math.round(acc));
+        // Stop the "in progress" indicator once we have a usable fix
+        if (acc <= 50) setLocating(false);
         // Keep the most accurate reading; replace only when a fix is at least as precise
         if (acc <= bestAccuracyRef.current + 1) {
           bestAccuracyRef.current = acc;
@@ -190,6 +194,7 @@ export function useKongossaStore() {
         if (err.code === err.PERMISSION_DENIED) {
           setPermission("denied");
         }
+        setLocating(false);
         setLocationError(true);
         setUserLocation((prev) => prev ?? { lat: 4.0511, lng: 9.7679 });
       },
@@ -205,6 +210,7 @@ export function useKongossaStore() {
       return;
     }
     setLocationError(false);
+    setLocating(true);
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         setPermission("granted");
@@ -216,6 +222,7 @@ export function useKongossaStore() {
       },
       (err) => {
         if (err.code === err.PERMISSION_DENIED) setPermission("denied");
+        setLocating(false);
         setLocationError(true);
         setUserLocation((prev) => prev ?? { lat: 4.0511, lng: 9.7679 });
       },
@@ -462,6 +469,7 @@ export function useKongossaStore() {
     userLocation,
     locationError,
     accuracy,
+    locating,
     permission,
     requestLocation,
     radius,

@@ -13,6 +13,7 @@ interface Props {
   onChangeArea: () => void;
   locationError: boolean;
   accuracy?: number | null;
+  locating?: boolean;
   permission?: "granted" | "denied" | "prompt" | "unsupported";
   onRequestLocation?: () => void;
 }
@@ -42,6 +43,7 @@ export default function ProfilePanel({
   onChangeArea,
   locationError,
   accuracy,
+  locating,
   permission,
   onRequestLocation,
 }: Props) {
@@ -56,6 +58,11 @@ export default function ProfilePanel({
       : accuracy <= 150
       ? "Moyenne"
       : "Faible";
+  // Convert accuracy (meters) into a precision percentage: ~5m = 100%, ~200m = 5%
+  const precisionPct =
+    accuracy == null
+      ? 0
+      : Math.max(5, Math.min(100, Math.round(100 - ((accuracy - 5) / 1.95))));
 
   return (
     <div className="pb-6">
@@ -148,23 +155,41 @@ export default function ProfilePanel({
             Position non disponible. L'app utilise une position par défaut (Douala).
           </p>
         ) : (
-          <div className="flex items-center justify-between">
-            <p className="text-muted-foreground text-xs">
-              Position active{accuracyLabel ? ` — précision ${accuracyLabel.toLowerCase()}` : ""}
-            </p>
-            {accuracy != null && (
-              <span
-                className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${
-                  accuracy <= 50
-                    ? "bg-primary/15 text-primary"
-                    : accuracy <= 150
-                    ? "bg-secondary/15 text-secondary"
-                    : "bg-destructive/15 text-destructive"
-                }`}
-              >
-                ±{accuracy}m
-              </span>
-            )}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <p className="text-muted-foreground text-xs flex items-center gap-1.5">
+                {locating && <RefreshCw className="w-3 h-3 text-primary animate-spin" />}
+                {locating
+                  ? "Affinage de ta position…"
+                  : `Position active${accuracyLabel ? ` — précision ${accuracyLabel.toLowerCase()}` : ""}`}
+              </p>
+              {accuracy != null && (
+                <span
+                  className={`text-[11px] font-bold px-2 py-0.5 rounded-full transition-colors ${
+                    accuracy <= 50
+                      ? "bg-primary/15 text-primary"
+                      : accuracy <= 150
+                      ? "bg-secondary/15 text-secondary"
+                      : "bg-destructive/15 text-destructive"
+                  }`}
+                >
+                  ±{accuracy}m
+                </span>
+              )}
+            </div>
+            {/* Live precision bar — updates automatically as the GPS sharpens */}
+            <div className="h-2 w-full rounded-full bg-background overflow-hidden">
+              <div
+                className={`h-full rounded-full transition-all duration-500 ${
+                  precisionPct >= 70
+                    ? "bg-primary"
+                    : precisionPct >= 40
+                    ? "bg-secondary"
+                    : "bg-destructive"
+                } ${locating ? "animate-pulse" : ""}`}
+                style={{ width: `${accuracy == null ? 8 : precisionPct}%` }}
+              />
+            </div>
           </div>
         )}
 
@@ -180,10 +205,11 @@ export default function ProfilePanel({
         {onRequestLocation && permission === "granted" && (
           <button
             onClick={onRequestLocation}
-            className="mt-3 w-full bg-background text-foreground font-bold text-sm py-2.5 rounded-xl active:scale-95 transition-transform flex items-center justify-center gap-2"
+            disabled={locating}
+            className="mt-3 w-full bg-background text-foreground font-bold text-sm py-2.5 rounded-xl active:scale-95 transition-transform flex items-center justify-center gap-2 disabled:opacity-60"
           >
-            <RefreshCw className="w-4 h-4" />
-            Actualiser ma position
+            <RefreshCw className={`w-4 h-4 ${locating ? "animate-spin" : ""}`} />
+            {locating ? "Localisation en cours…" : "Actualiser ma position"}
           </button>
         )}
       </div>
