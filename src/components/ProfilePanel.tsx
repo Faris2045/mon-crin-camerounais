@@ -58,6 +58,11 @@ export default function ProfilePanel({
       : accuracy <= 150
       ? "Moyenne"
       : "Faible";
+  // Convert accuracy (meters) into a precision percentage: ~5m = 100%, ~200m = 5%
+  const precisionPct =
+    accuracy == null
+      ? 0
+      : Math.max(5, Math.min(100, Math.round(100 - ((accuracy - 5) / 1.95))));
 
   return (
     <div className="pb-6">
