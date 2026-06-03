@@ -97,6 +97,7 @@ export function useKongossaStore() {
   const [radius, setRadius] = useState(1000);
   const [locationError, setLocationError] = useState(false);
   const [accuracy, setAccuracy] = useState<number | null>(null);
+  const [locating, setLocating] = useState(false);
   const [permission, setPermission] = useState<"granted" | "denied" | "prompt" | "unsupported">("prompt");
   const [loading, setLoading] = useState(true);
   const bestAccuracyRef = useRef<number>(Infinity);
