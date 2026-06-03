@@ -469,6 +469,7 @@ export function useKongossaStore() {
     userLocation,
     locationError,
     accuracy,
+    locating,
     permission,
     requestLocation,
     radius,
