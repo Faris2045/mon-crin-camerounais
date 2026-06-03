@@ -205,10 +205,11 @@ export default function ProfilePanel({
         {onRequestLocation && permission === "granted" && (
           <button
             onClick={onRequestLocation}
-            className="mt-3 w-full bg-background text-foreground font-bold text-sm py-2.5 rounded-xl active:scale-95 transition-transform flex items-center justify-center gap-2"
+            disabled={locating}
+            className="mt-3 w-full bg-background text-foreground font-bold text-sm py-2.5 rounded-xl active:scale-95 transition-transform flex items-center justify-center gap-2 disabled:opacity-60"
           >
-            <RefreshCw className="w-4 h-4" />
-            Actualiser ma position
+            <RefreshCw className={`w-4 h-4 ${locating ? "animate-spin" : ""}`} />
+            {locating ? "Localisation en cours…" : "Actualiser ma position"}
           </button>
         )}
       </div>
