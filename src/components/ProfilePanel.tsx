@@ -43,6 +43,7 @@ export default function ProfilePanel({
   onChangeArea,
   locationError,
   accuracy,
+  locating,
   permission,
   onRequestLocation,
 }: Props) {
