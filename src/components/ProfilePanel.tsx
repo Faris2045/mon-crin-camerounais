@@ -155,23 +155,41 @@ export default function ProfilePanel({
             Position non disponible. L'app utilise une position par défaut (Douala).
           </p>
         ) : (
-          <div className="flex items-center justify-between">
-            <p className="text-muted-foreground text-xs">
-              Position active{accuracyLabel ? ` — précision ${accuracyLabel.toLowerCase()}` : ""}
-            </p>
-            {accuracy != null && (
-              <span
-                className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${
-                  accuracy <= 50
-                    ? "bg-primary/15 text-primary"
-                    : accuracy <= 150
-                    ? "bg-secondary/15 text-secondary"
-                    : "bg-destructive/15 text-destructive"
-                }`}
-              >
-                ±{accuracy}m
-              </span>
-            )}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <p className="text-muted-foreground text-xs flex items-center gap-1.5">
+                {locating && <RefreshCw className="w-3 h-3 text-primary animate-spin" />}
+                {locating
+                  ? "Affinage de ta position…"
+                  : `Position active${accuracyLabel ? ` — précision ${accuracyLabel.toLowerCase()}` : ""}`}
+              </p>
+              {accuracy != null && (
+                <span
+                  className={`text-[11px] font-bold px-2 py-0.5 rounded-full transition-colors ${
+                    accuracy <= 50
+                      ? "bg-primary/15 text-primary"
+                      : accuracy <= 150
+                      ? "bg-secondary/15 text-secondary"
+                      : "bg-destructive/15 text-destructive"
+                  }`}
+                >
+                  ±{accuracy}m
+                </span>
+              )}
+            </div>
+            {/* Live precision bar — updates automatically as the GPS sharpens */}
+            <div className="h-2 w-full rounded-full bg-background overflow-hidden">
+              <div
+                className={`h-full rounded-full transition-all duration-500 ${
+                  precisionPct >= 70
+                    ? "bg-primary"
+                    : precisionPct >= 40
+                    ? "bg-secondary"
+                    : "bg-destructive"
+                } ${locating ? "animate-pulse" : ""}`}
+                style={{ width: `${accuracy == null ? 8 : precisionPct}%` }}
+              />
+            </div>
           </div>
         )}
 
