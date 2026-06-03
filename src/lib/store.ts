@@ -210,6 +210,7 @@ export function useKongossaStore() {
       return;
     }
     setLocationError(false);
+    setLocating(true);
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         setPermission("granted");
@@ -221,6 +222,7 @@ export function useKongossaStore() {
       },
       (err) => {
         if (err.code === err.PERMISSION_DENIED) setPermission("denied");
+        setLocating(false);
         setLocationError(true);
         setUserLocation((prev) => prev ?? { lat: 4.0511, lng: 9.7679 });
       },
