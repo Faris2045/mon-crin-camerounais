@@ -22,7 +22,27 @@ function timeAgo(ts: number): string {
 
 export default function AlertCenter({ alerts, myUserId, onResolve }: Props) {
   const openMaps = (lat: number, lng: number) => {
-    window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`, "_blank");
+    const isNative =
+      typeof window !== "undefined" &&
+      // @ts-expect-error Capacitor is injected at runtime on native builds
+      (window.Capacitor?.isNativePlatform?.() ?? false);
+
+    // On a phone (native build) open the installed maps app directly via geo: URI.
+    if (isNative) {
+      window.location.href = `geo:${lat},${lng}?q=${lat},${lng}(Alerte)`;
+      return;
+    }
+
+    // On the web, open Google Maps in a real new tab using a user-gesture anchor.
+    // (window.open is sometimes blocked inside the embedded preview iframe.)
+    const url = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+    const a = document.createElement("a");
+    a.href = url;
+    a.target = "_blank";
+    a.rel = "noopener noreferrer";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
   };
 
   if (alerts.length === 0) {
