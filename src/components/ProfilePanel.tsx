@@ -13,6 +13,7 @@ interface Props {
   onChangeArea: () => void;
   locationError: boolean;
   accuracy?: number | null;
+  locating?: boolean;
   permission?: "granted" | "denied" | "prompt" | "unsupported";
   onRequestLocation?: () => void;
 }
