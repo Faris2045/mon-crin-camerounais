@@ -427,9 +427,11 @@ export function useKongossaStore() {
     if (error) console.error("Error reporting:", error);
   }, []);
 
-  // Engagement score: each like = 1 point, each comment = 2 points
-  const TREND_THRESHOLD = 5;
+  // A post becomes a trend once it reaches 10 likes OR 10 comments
+  const TREND_THRESHOLD = 10;
   const engagement = (m: KongossaMessage) => m.likes + m.comments.length * 2;
+  const isTrending = (m: KongossaMessage) =>
+    m.likes >= TREND_THRESHOLD || m.comments.length >= TREND_THRESHOLD;
 
   const activeMessages = messages.filter((m) => m.expiresAt > Date.now() && !m.reported);
 
@@ -440,7 +442,7 @@ export function useKongossaStore() {
 
   // TENDANCES: popular posts surface beyond the radius, ranked by engagement
   const hotMessages = [...activeMessages]
-    .filter((m) => engagement(m) >= TREND_THRESHOLD)
+    .filter((m) => isTrending(m))
     .sort((a, b) => engagement(b) - engagement(a));
 
   const myMessages = activeMessages.filter((m) => m.authorId === user.id);
