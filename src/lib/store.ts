@@ -162,6 +162,14 @@ export function useKongossaStore() {
     setShowAreaPrompt(false);
   }, [user]);
 
+  // Disconnect: clears the local identity so the user can start over
+  const logout = useCallback(() => {
+    localStorage.removeItem("kongossa_user");
+    window.location.reload();
+  }, []);
+
+
+
   // Start watching the GPS position — keeps the most accurate fix available
   const startWatching = useCallback(() => {
     if (!navigator.geolocation) {
