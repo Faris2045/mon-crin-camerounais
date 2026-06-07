@@ -1,4 +1,4 @@
-import { MapPin, RefreshCw, Heart, MessageCircle, Megaphone, Radar } from "lucide-react";
+import { MapPin, RefreshCw, Heart, MessageCircle, Megaphone, Radar, LogOut } from "lucide-react";
 import { motion } from "framer-motion";
 import { getAreaById } from "@/components/AreaSelector";
 import { KongossaMessage } from "@/lib/store";
@@ -16,6 +16,7 @@ interface Props {
   locating?: boolean;
   permission?: "granted" | "denied" | "prompt" | "unsupported";
   onRequestLocation?: () => void;
+  onLogout?: () => void;
 }
 
 const RADIUS_OPTIONS = [
