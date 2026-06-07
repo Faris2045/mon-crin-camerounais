@@ -45,7 +45,7 @@ export default function SplashScreen({ onFinish }: Props) {
           transition={{ delay: 0.8 }}
           className="text-white/70 text-sm font-semibold mt-2 text-center px-8"
         >
-          Ce que tout le monde voit, mais personne ne dit
+          Les infos locales en temps réel
         </motion.p>
 
         <motion.div
