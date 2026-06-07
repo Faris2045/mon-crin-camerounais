@@ -59,11 +59,11 @@ export default function MessageCard({ message, userId, onLike, onTap, onReport, 
             onClick={(e) => { e.stopPropagation(); onLike(message.id); }}
             className={`flex items-center gap-1 text-sm font-semibold transition-colors ${liked ? "text-kongossa-hot" : "text-muted-foreground"}`}
           >
-            <Heart className={`w-4 h-4 ${liked ? "fill-current" : ""}`} />
+            <span className="text-base leading-none">{liked ? "❤️" : "🤍"}</span>
             {message.likes}
           </button>
           <button className="flex items-center gap-1 text-sm text-muted-foreground font-semibold">
-            <MessageCircle className="w-4 h-4" />
+            <span className="text-base leading-none">💬</span>
             {message.comments.length}
           </button>
         </div>
