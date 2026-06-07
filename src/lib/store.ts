@@ -493,5 +493,7 @@ export function useKongossaStore() {
     needsInitialArea,
     changeArea,
     dismissAreaPrompt,
+    logout,
+    isTrending,
   };
 }
