@@ -1,6 +1,5 @@
-import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MapPin, Store, GraduationCap, UtensilsCrossed, Building2, Trees, Church, Dumbbell, Bus, ShoppingBag, X } from "lucide-react";
+import { Store, GraduationCap, UtensilsCrossed, Building2, Trees, Church, Bus, ShoppingBag, Home, Briefcase, School, Stethoscope } from "lucide-react";
 
 export interface Area {
   id: string;
@@ -11,26 +10,32 @@ export interface Area {
 
 export const AREAS: Area[] = [
   { id: "public", label: "Espace public", icon: Building2, emoji: "🏙️" },
+  { id: "neighborhood", label: "Quartier", icon: Home, emoji: "🏘️" },
+  { id: "work", label: "Travail", icon: Briefcase, emoji: "💼" },
+  { id: "university", label: "Université", icon: GraduationCap, emoji: "🎓" },
+  { id: "highschool", label: "Lycée", icon: School, emoji: "🏫" },
   { id: "supermarket", label: "Supermarché", icon: ShoppingBag, emoji: "🛒" },
   { id: "shop", label: "Boutique", icon: Store, emoji: "🏪" },
-  { id: "university", label: "Université", icon: GraduationCap, emoji: "🎓" },
   { id: "restaurant", label: "Restaurant", icon: UtensilsCrossed, emoji: "🍽️" },
-  { id: "park", label: "Parc / Jardin", icon: Trees, emoji: "🌳" },
-  { id: "church", label: "Lieu de culte", icon: Church, emoji: "⛪" },
-  { id: "gym", label: "Salle de sport", icon: Dumbbell, emoji: "💪" },
   { id: "transport", label: "Transport", icon: Bus, emoji: "🚌" },
+  { id: "hospital", label: "Hôpital", icon: Stethoscope, emoji: "🏥" },
+  { id: "church", label: "Lieu de culte", icon: Church, emoji: "⛪" },
+  { id: "park", label: "Parc / Jardin", icon: Trees, emoji: "🌳" },
 ];
 
 export const AREA_NAMES: Record<string, string[]> = {
   public: ["Passant", "Flâneur", "Citadin", "Piéton", "Badaud", "Promeneur"],
+  neighborhood: ["Voisin", "Riverain", "Habitant", "Résident", "Du quartier"],
+  work: ["Collègue", "Employé", "Bosseur", "Pro", "Travailleur"],
+  university: ["Étudiant", "Camarade", "Intellectuel", "Penseur", "Chercheur"],
+  highschool: ["Lycéen", "Élève", "Camarade", "Bachelier", "Étudiant"],
   supermarket: ["Client mystère", "Acheteur", "Consommateur", "Visiteur rayon"],
   shop: ["Chineur", "Habitué", "Curieux", "Client discret"],
-  university: ["Étudiant", "Camarade", "Intellectuel", "Penseur", "Chercheur"],
   restaurant: ["Gourmet", "Fin palais", "Convive", "Gastronome", "Affamé"],
-  park: ["Rêveur", "Marcheur", "Contemplatif", "Nature lover"],
-  church: ["Fidèle", "Croyant", "Pèlerin", "Méditant"],
-  gym: ["Sportif", "Athlète", "Coach", "Motivé", "Guerrier"],
   transport: ["Voyageur", "Passager", "Navetteur", "Nomade"],
+  hospital: ["Visiteur", "Patient", "Accompagnant", "Soignant"],
+  church: ["Fidèle", "Croyant", "Pèlerin", "Méditant"],
+  park: ["Rêveur", "Marcheur", "Contemplatif", "Nature lover"],
 };
 
 export function getAreaName(areaId: string): string {
