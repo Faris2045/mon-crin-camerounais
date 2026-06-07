@@ -116,6 +116,7 @@ export default function Index() {
             locating={store.locating}
             permission={store.permission}
             onRequestLocation={store.requestLocation}
+            onLogout={store.logout}
           />
         ) : (
           <>
