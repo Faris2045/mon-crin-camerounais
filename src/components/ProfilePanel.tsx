@@ -239,10 +239,20 @@ export default function ProfilePanel({
         </div>
       )}
 
+      {onLogout && (
+        <button
+          onClick={onLogout}
+          className="mt-6 w-full bg-destructive/10 text-destructive font-bold text-sm py-3 rounded-xl active:scale-95 transition-transform flex items-center justify-center gap-2"
+        >
+          <LogOut className="w-4 h-4" />
+          Se déconnecter
+        </button>
+      )}
+
       <div className="mt-8 text-center">
         <p className="text-xs font-bold text-primary/60">KONGOSSA v1.0</p>
         <p className="text-[10px] text-muted-foreground mt-0.5 flex items-center justify-center gap-1">
-          <MapPin className="w-3 h-3" /> Les infos de proximité, en temps réel
+          <MapPin className="w-3 h-3" /> Informe, Alerte, Protège
         </p>
       </div>
     </div>
