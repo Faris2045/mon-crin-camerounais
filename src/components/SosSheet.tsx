@@ -105,7 +105,7 @@ export default function SosSheet({ open, onClose, onSend, locationError }: Props
                 <textarea
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
-                  placeholder="Décris brièvement la situation (optionnel)…"
+                  placeholder="Donne plus de détails sur le lieu (par exemple secteur, rue, entrée…) et décris brièvement la situation"
                   rows={2}
                   className="w-full bg-background border border-border rounded-xl px-4 py-3 text-foreground outline-none focus:ring-2 focus:ring-destructive resize-none mb-4"
                 />
