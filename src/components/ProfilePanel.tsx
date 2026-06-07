@@ -47,6 +47,7 @@ export default function ProfilePanel({
   locating,
   permission,
   onRequestLocation,
+  onLogout,
 }: Props) {
   const area = getAreaById(areaId);
   const accuracyLabel =
