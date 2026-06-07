@@ -1,4 +1,4 @@
-import { Heart, MessageCircle, MapPin, Flag, Clock, Flame } from "lucide-react";
+import { MapPin, Flag, Clock, Flame } from "lucide-react";
 import { KongossaMessage } from "@/lib/store";
 import { motion } from "framer-motion";
 
