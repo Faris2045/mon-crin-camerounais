@@ -193,6 +193,7 @@ export default function Index() {
             userId={store.user.id}
             onBack={() => setSelectedId(null)}
             onLike={store.toggleLike}
+            onDislike={store.toggleDislike}
             onComment={store.addComment}
             onReport={handleReport}
           />
