@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, Heart, MapPin, Clock, Send, Flag, Flame } from "lucide-react";
+import { ArrowLeft, ThumbsUp, ThumbsDown, MapPin, Clock, Send, Flag, Flame } from "lucide-react";
 import { KongossaMessage } from "@/lib/store";
 
 interface Props {
@@ -8,6 +8,7 @@ interface Props {
   userId: string;
   onBack: () => void;
   onLike: (id: string) => void;
+  onDislike: (id: string) => void;
   onComment: (id: string, text: string) => void;
   onReport: (id: string) => void;
 }
