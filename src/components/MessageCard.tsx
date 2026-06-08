@@ -28,8 +28,9 @@ function formatDistance(meters: number): string {
   return `${(meters / 1000).toFixed(1)}km`;
 }
 
-export default function MessageCard({ message, userId, onLike, onTap, onReport, isHot }: Props) {
+export default function MessageCard({ message, userId, onLike, onDislike, onTap, onReport, isHot }: Props) {
   const liked = message.likedBy.includes(userId);
+  const disliked = message.dislikedBy.includes(userId);
 
   return (
     <motion.div
