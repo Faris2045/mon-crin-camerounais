@@ -1,3 +1,5 @@
+import { useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { MapPin, RefreshCw, Heart, MessageCircle, Megaphone, Radar, LogOut } from "lucide-react";
 import { motion } from "framer-motion";
 import { getAreaById } from "@/components/AreaSelector";
