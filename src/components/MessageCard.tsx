@@ -59,13 +59,20 @@ export default function MessageCard({ message, userId, onLike, onDislike, onTap,
         <div className="flex items-center gap-4">
           <button
             onClick={(e) => { e.stopPropagation(); onLike(message.id); }}
-            className={`flex items-center gap-1 text-sm font-semibold transition-colors ${liked ? "text-kongossa-hot" : "text-muted-foreground"}`}
+            className={`flex items-center gap-1 text-sm font-semibold transition-colors ${liked ? "text-primary" : "text-muted-foreground"}`}
           >
-            <span className="text-base leading-none">{liked ? "❤️" : "🤍"}</span>
+            <ThumbsUp className={`w-4 h-4 ${liked ? "fill-current" : ""}`} />
             {message.likes}
           </button>
+          <button
+            onClick={(e) => { e.stopPropagation(); onDislike(message.id); }}
+            className={`flex items-center gap-1 text-sm font-semibold transition-colors ${disliked ? "text-destructive" : "text-muted-foreground"}`}
+          >
+            <ThumbsDown className={`w-4 h-4 ${disliked ? "fill-current" : ""}`} />
+            {message.dislikes}
+          </button>
           <button className="flex items-center gap-1 text-sm text-muted-foreground font-semibold">
-            <span className="text-base leading-none">💬</span>
+            <MessageCircle className="w-4 h-4" />
             {message.comments.length}
           </button>
         </div>
