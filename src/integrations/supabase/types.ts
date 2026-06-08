@@ -114,6 +114,8 @@ export type Database = {
           author: string
           author_id: string
           created_at: string
+          disliked_by: string[]
+          dislikes: number
           expires_at: string
           id: string
           lat: number
@@ -127,6 +129,8 @@ export type Database = {
           author: string
           author_id: string
           created_at?: string
+          disliked_by?: string[]
+          dislikes?: number
           expires_at?: string
           id?: string
           lat: number
@@ -140,6 +144,8 @@ export type Database = {
           author?: string
           author_id?: string
           created_at?: string
+          disliked_by?: string[]
+          dislikes?: number
           expires_at?: string
           id?: string
           lat?: number
