@@ -22,10 +22,11 @@ function timeAgo(timestamp: number): string {
   return `Il y a ${hours}h`;
 }
 
-export default function MessageDetail({ message, userId, onBack, onLike, onComment, onReport }: Props) {
+export default function MessageDetail({ message, userId, onBack, onLike, onDislike, onComment, onReport }: Props) {
   const [comment, setComment] = useState("");
   const liked = message.likedBy.includes(userId);
-  const isHot = message.likes >= 10;
+  const disliked = message.dislikedBy.includes(userId);
+  const isHot = message.likes >= 50;
 
   const handleComment = () => {
     if (!comment.trim()) return;
