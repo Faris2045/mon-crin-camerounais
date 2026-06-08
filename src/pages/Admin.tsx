@@ -1,8 +1,9 @@
 import { useState, useCallback } from "react";
+import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import {
-  Shield, Users, Megaphone, Siren, Trash2, CheckCircle2, LogOut, RefreshCw, Lock,
+  Shield, Users, Megaphone, Siren, Trash2, CheckCircle2, LogOut, RefreshCw, Lock, ArrowLeft,
 } from "lucide-react";
 
 interface Identity { id: string; author_id: string; full_name: string; phone: string; created_at: string; }
