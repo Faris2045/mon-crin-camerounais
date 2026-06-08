@@ -52,6 +52,23 @@ export default function ProfilePanel({
   onLogout,
 }: Props) {
   const area = getAreaById(areaId);
+  const navigate = useNavigate();
+  const tapCount = useRef(0);
+  const tapTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Secret access to the admin console: tap the version label 7 times quickly.
+  // Ordinary users never see it; staff just tap discreetly to sign in.
+  const handleSecretTap = () => {
+    tapCount.current += 1;
+    if (tapTimer.current) clearTimeout(tapTimer.current);
+    tapTimer.current = setTimeout(() => {
+      tapCount.current = 0;
+    }, 1500);
+    if (tapCount.current >= 7) {
+      tapCount.current = 0;
+      navigate("/admin");
+    }
+  };
   const accuracyLabel =
     accuracy == null
       ? null
