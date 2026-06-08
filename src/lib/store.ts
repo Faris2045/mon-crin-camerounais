@@ -19,6 +19,8 @@ export interface KongossaMessage {
   expiresAt: number;
   likes: number;
   likedBy: string[];
+  dislikes: number;
+  dislikedBy: string[];
   comments: KongossaComment[];
   distance: number;
   reported: boolean;
@@ -310,6 +312,8 @@ export function useKongossaStore() {
       expiresAt: new Date(m.expires_at).getTime(),
       likes: m.likes,
       likedBy: m.liked_by || [],
+      dislikes: (m as { dislikes?: number }).dislikes ?? 0,
+      dislikedBy: (m as { disliked_by?: string[] }).disliked_by || [],
       comments: commentsByMsg[m.id] || [],
       distance: calculateDistance(loc.lat, loc.lng, m.lat, m.lng),
       reported: m.reported,
