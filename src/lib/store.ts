@@ -510,6 +510,7 @@ export function useKongossaStore() {
     setRadius,
     addMessage,
     toggleLike,
+    toggleDislike,
     addComment,
     reportMessage,
     loading,
