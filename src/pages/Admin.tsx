@@ -1,8 +1,9 @@
 import { useState, useCallback } from "react";
+import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import {
-  Shield, Users, Megaphone, Siren, Trash2, CheckCircle2, LogOut, RefreshCw, Lock,
+  Shield, Users, Megaphone, Siren, Trash2, CheckCircle2, LogOut, RefreshCw, Lock, ArrowLeft,
 } from "lucide-react";
 
 interface Identity { id: string; author_id: string; full_name: string; phone: string; created_at: string; }
@@ -124,7 +125,13 @@ export default function Admin() {
                 Identifiants par défaut : <span className="font-bold">admin</span> /{" "}
                 <span className="font-bold">kongossa2024</span>
               </p>
-            </div>
+          </div>
+          <Link
+            to="/"
+            className="mt-5 flex items-center justify-center gap-1.5 text-xs font-semibold text-muted-foreground active:scale-95 transition-transform"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" /> Retour à l'application
+          </Link>
           </div>
         </div>
       </div>

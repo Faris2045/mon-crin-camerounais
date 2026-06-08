@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, Heart, MapPin, Clock, Send, Flag, Flame } from "lucide-react";
+import { ArrowLeft, ThumbsUp, ThumbsDown, MapPin, Clock, Send, Flag, Flame } from "lucide-react";
 import { KongossaMessage } from "@/lib/store";
 
 interface Props {
@@ -8,6 +8,7 @@ interface Props {
   userId: string;
   onBack: () => void;
   onLike: (id: string) => void;
+  onDislike: (id: string) => void;
   onComment: (id: string, text: string) => void;
   onReport: (id: string) => void;
 }
@@ -21,10 +22,11 @@ function timeAgo(timestamp: number): string {
   return `Il y a ${hours}h`;
 }
 
-export default function MessageDetail({ message, userId, onBack, onLike, onComment, onReport }: Props) {
+export default function MessageDetail({ message, userId, onBack, onLike, onDislike, onComment, onReport }: Props) {
   const [comment, setComment] = useState("");
   const liked = message.likedBy.includes(userId);
-  const isHot = message.likes >= 10;
+  const disliked = message.dislikedBy.includes(userId);
+  const isHot = message.likes >= 50;
 
   const handleComment = () => {
     if (!comment.trim()) return;
@@ -63,8 +65,11 @@ export default function MessageDetail({ message, userId, onBack, onLike, onComme
           </div>
           <p className="text-foreground text-base leading-relaxed mb-3">{message.text}</p>
           <div className="flex items-center gap-4">
-            <button onClick={() => onLike(message.id)} className={`flex items-center gap-1 font-semibold ${liked ? "text-kongossa-hot" : "text-muted-foreground"}`}>
-              <Heart className={`w-4 h-4 ${liked ? "fill-current" : ""}`} /> {message.likes}
+            <button onClick={() => onLike(message.id)} className={`flex items-center gap-1 font-semibold ${liked ? "text-primary" : "text-muted-foreground"}`}>
+              <ThumbsUp className={`w-4 h-4 ${liked ? "fill-current" : ""}`} /> {message.likes}
+            </button>
+            <button onClick={() => onDislike(message.id)} className={`flex items-center gap-1 font-semibold ${disliked ? "text-destructive" : "text-muted-foreground"}`}>
+              <ThumbsDown className={`w-4 h-4 ${disliked ? "fill-current" : ""}`} /> {message.dislikes}
             </button>
             <button onClick={() => onReport(message.id)} className="text-muted-foreground/50 hover:text-destructive ml-auto">
               <Flag className="w-3.5 h-3.5" />

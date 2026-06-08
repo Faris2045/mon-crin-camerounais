@@ -1,3 +1,5 @@
+import { useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { MapPin, RefreshCw, Heart, MessageCircle, Megaphone, Radar, LogOut } from "lucide-react";
 import { motion } from "framer-motion";
 import { getAreaById } from "@/components/AreaSelector";
@@ -50,6 +52,23 @@ export default function ProfilePanel({
   onLogout,
 }: Props) {
   const area = getAreaById(areaId);
+  const navigate = useNavigate();
+  const tapCount = useRef(0);
+  const tapTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Secret access to the admin console: tap the version label 7 times quickly.
+  // Ordinary users never see it; staff just tap discreetly to sign in.
+  const handleSecretTap = () => {
+    tapCount.current += 1;
+    if (tapTimer.current) clearTimeout(tapTimer.current);
+    tapTimer.current = setTimeout(() => {
+      tapCount.current = 0;
+    }, 1500);
+    if (tapCount.current >= 7) {
+      tapCount.current = 0;
+      navigate("/admin");
+    }
+  };
   const accuracyLabel =
     accuracy == null
       ? null
@@ -250,7 +269,7 @@ export default function ProfilePanel({
       )}
 
       <div className="mt-8 text-center">
-        <p className="text-xs font-bold text-primary/60">KONGOSSA v1.0</p>
+        <p onClick={handleSecretTap} className="text-xs font-bold text-primary/60 select-none cursor-default">KONGOSSA v1.0</p>
         <p className="text-[10px] text-muted-foreground mt-0.5 flex items-center justify-center gap-1">
           <MapPin className="w-3 h-3" /> Informe, Alerte, Protège
         </p>

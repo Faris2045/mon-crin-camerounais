@@ -150,6 +150,7 @@ export default function Index() {
                   message={msg}
                   userId={store.user.id}
                   onLike={store.toggleLike}
+                  onDislike={store.toggleDislike}
                   onTap={setSelectedId}
                   onReport={handleReport}
                   isHot={store.isTrending(msg)}
@@ -192,6 +193,7 @@ export default function Index() {
             userId={store.user.id}
             onBack={() => setSelectedId(null)}
             onLike={store.toggleLike}
+            onDislike={store.toggleDislike}
             onComment={store.addComment}
             onReport={handleReport}
           />

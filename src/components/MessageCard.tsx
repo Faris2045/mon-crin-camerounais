@@ -1,4 +1,4 @@
-import { MapPin, Flag, Clock, Flame } from "lucide-react";
+import { MapPin, Flag, Clock, Flame, ThumbsUp, ThumbsDown, MessageCircle } from "lucide-react";
 import { KongossaMessage } from "@/lib/store";
 import { motion } from "framer-motion";
 
@@ -6,6 +6,7 @@ interface Props {
   message: KongossaMessage;
   userId: string;
   onLike: (id: string) => void;
+  onDislike: (id: string) => void;
   onTap: (id: string) => void;
   onReport: (id: string) => void;
   isHot?: boolean;
@@ -27,8 +28,9 @@ function formatDistance(meters: number): string {
   return `${(meters / 1000).toFixed(1)}km`;
 }
 
-export default function MessageCard({ message, userId, onLike, onTap, onReport, isHot }: Props) {
+export default function MessageCard({ message, userId, onLike, onDislike, onTap, onReport, isHot }: Props) {
   const liked = message.likedBy.includes(userId);
+  const disliked = message.dislikedBy.includes(userId);
 
   return (
     <motion.div
@@ -57,13 +59,20 @@ export default function MessageCard({ message, userId, onLike, onTap, onReport, 
         <div className="flex items-center gap-4">
           <button
             onClick={(e) => { e.stopPropagation(); onLike(message.id); }}
-            className={`flex items-center gap-1 text-sm font-semibold transition-colors ${liked ? "text-kongossa-hot" : "text-muted-foreground"}`}
+            className={`flex items-center gap-1 text-sm font-semibold transition-colors ${liked ? "text-primary" : "text-muted-foreground"}`}
           >
-            <span className="text-base leading-none">{liked ? "❤️" : "🤍"}</span>
+            <ThumbsUp className={`w-4 h-4 ${liked ? "fill-current" : ""}`} />
             {message.likes}
           </button>
+          <button
+            onClick={(e) => { e.stopPropagation(); onDislike(message.id); }}
+            className={`flex items-center gap-1 text-sm font-semibold transition-colors ${disliked ? "text-destructive" : "text-muted-foreground"}`}
+          >
+            <ThumbsDown className={`w-4 h-4 ${disliked ? "fill-current" : ""}`} />
+            {message.dislikes}
+          </button>
           <button className="flex items-center gap-1 text-sm text-muted-foreground font-semibold">
-            <span className="text-base leading-none">💬</span>
+            <MessageCircle className="w-4 h-4" />
             {message.comments.length}
           </button>
         </div>
