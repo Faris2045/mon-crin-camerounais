@@ -65,8 +65,11 @@ export default function MessageDetail({ message, userId, onBack, onLike, onDisli
           </div>
           <p className="text-foreground text-base leading-relaxed mb-3">{message.text}</p>
           <div className="flex items-center gap-4">
-            <button onClick={() => onLike(message.id)} className={`flex items-center gap-1 font-semibold ${liked ? "text-kongossa-hot" : "text-muted-foreground"}`}>
-              <Heart className={`w-4 h-4 ${liked ? "fill-current" : ""}`} /> {message.likes}
+            <button onClick={() => onLike(message.id)} className={`flex items-center gap-1 font-semibold ${liked ? "text-primary" : "text-muted-foreground"}`}>
+              <ThumbsUp className={`w-4 h-4 ${liked ? "fill-current" : ""}`} /> {message.likes}
+            </button>
+            <button onClick={() => onDislike(message.id)} className={`flex items-center gap-1 font-semibold ${disliked ? "text-destructive" : "text-muted-foreground"}`}>
+              <ThumbsDown className={`w-4 h-4 ${disliked ? "fill-current" : ""}`} /> {message.dislikes}
             </button>
             <button onClick={() => onReport(message.id)} className="text-muted-foreground/50 hover:text-destructive ml-auto">
               <Flag className="w-3.5 h-3.5" />
