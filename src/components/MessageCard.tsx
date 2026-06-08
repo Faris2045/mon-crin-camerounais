@@ -1,4 +1,4 @@
-import { MapPin, Flag, Clock, Flame } from "lucide-react";
+import { MapPin, Flag, Clock, Flame, ThumbsUp, ThumbsDown, MessageCircle } from "lucide-react";
 import { KongossaMessage } from "@/lib/store";
 import { motion } from "framer-motion";
 
@@ -6,6 +6,7 @@ interface Props {
   message: KongossaMessage;
   userId: string;
   onLike: (id: string) => void;
+  onDislike: (id: string) => void;
   onTap: (id: string) => void;
   onReport: (id: string) => void;
   isHot?: boolean;
