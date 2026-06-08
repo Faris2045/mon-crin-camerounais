@@ -417,11 +417,31 @@ export function useKongossaStore() {
     if (!msg) return;
     const liked = msg.likedBy.includes(user.id);
     const newLikedBy = liked ? msg.likedBy.filter((id) => id !== user.id) : [...msg.likedBy, user.id];
+    // Liking removes any existing dislike from the same user
+    const newDislikedBy = msg.dislikedBy.filter((id) => id !== user.id);
     const { error } = await supabase.from("messages").update({
       likes: newLikedBy.length,
       liked_by: newLikedBy,
+      dislikes: newDislikedBy.length,
+      disliked_by: newDislikedBy,
     }).eq("id", messageId);
     if (error) console.error("Error toggling like:", error);
+  }, [messages, user.id]);
+
+  const toggleDislike = useCallback(async (messageId: string) => {
+    const msg = messages.find((m) => m.id === messageId);
+    if (!msg) return;
+    const disliked = msg.dislikedBy.includes(user.id);
+    const newDislikedBy = disliked ? msg.dislikedBy.filter((id) => id !== user.id) : [...msg.dislikedBy, user.id];
+    // Disliking removes any existing like from the same user
+    const newLikedBy = msg.likedBy.filter((id) => id !== user.id);
+    const { error } = await supabase.from("messages").update({
+      likes: newLikedBy.length,
+      liked_by: newLikedBy,
+      dislikes: newDislikedBy.length,
+      disliked_by: newDislikedBy,
+    }).eq("id", messageId);
+    if (error) console.error("Error toggling dislike:", error);
   }, [messages, user.id]);
 
   const addComment = useCallback(async (messageId: string, text: string) => {
@@ -439,8 +459,8 @@ export function useKongossaStore() {
     if (error) console.error("Error reporting:", error);
   }, []);
 
-  // A post becomes a trend once it reaches 10 likes OR 10 comments
-  const TREND_THRESHOLD = 10;
+  // A post becomes a trend once it reaches 50 likes OR 50 comments
+  const TREND_THRESHOLD = 50;
   const engagement = (m: KongossaMessage) => m.likes + m.comments.length * 2;
   const isTrending = (m: KongossaMessage) =>
     m.likes >= TREND_THRESHOLD || m.comments.length >= TREND_THRESHOLD;
