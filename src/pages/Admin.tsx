@@ -225,7 +225,7 @@ export default function Admin() {
         ))}
         {tab === "users" && filteredIdentities.length === 0 && <Empty text="Aucun utilisateur" />}
 
-        {tab === "messages" && messages.map((m) => (
+        {tab === "messages" && filteredMessages.map((m) => (
           <div key={m.id} className="bg-card rounded-2xl p-4 shadow-sm">
             <div className="flex items-center justify-between mb-1">
               <span className="font-bold text-sm text-foreground">{m.author}</span>
@@ -238,11 +238,11 @@ export default function Admin() {
             </div>
             <p className="text-sm text-foreground">{m.text}</p>
             <p className="text-[10px] text-muted-foreground mt-1">
-              ❤️ {m.likes} {m.reported ? "· ⚠️ signalé" : ""}
+              👍 {m.likes} · {fmtDate(m.created_at)} {m.reported ? "· ⚠️ signalé" : ""}
             </p>
           </div>
         ))}
-        {tab === "messages" && messages.length === 0 && <Empty text="Aucun kongossa" />}
+        {tab === "messages" && filteredMessages.length === 0 && <Empty text="Aucun kongossa" />}
 
         {tab === "alerts" && alerts.map((a) => (
           <div key={a.id} className="bg-card rounded-2xl p-4 shadow-sm border-2 border-destructive/30">
