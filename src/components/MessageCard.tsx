@@ -31,12 +31,19 @@ function formatDistance(meters: number): string {
 export default function MessageCard({ message, userId, onLike, onDislike, onTap, onReport, isHot }: Props) {
   const liked = message.likedBy.includes(userId);
   const disliked = message.dislikedBy.includes(userId);
+  const mine = message.authorId === userId;
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className={`rounded-2xl p-4 mb-3 shadow-sm relative ${isHot ? "bg-gradient-to-r from-card to-kongossa-bubble border-2 border-secondary/30" : "bg-card"}`}
+      className={`rounded-2xl p-4 mb-3 shadow-sm relative ${
+        isHot
+          ? "bg-gradient-to-r from-card to-kongossa-bubble border-2 border-secondary/30"
+          : mine
+            ? "bg-primary/10 border border-primary/30 ml-6"
+            : "bg-card mr-6"
+      }`}
       onClick={() => onTap(message.id)}
     >
       {isHot && (
@@ -46,7 +53,14 @@ export default function MessageCard({ message, userId, onLike, onDislike, onTap,
       )}
 
       <div className="flex items-center justify-between mb-2">
-        <span className="font-bold text-sm text-foreground">{message.author}</span>
+        <span className={`font-bold text-sm flex items-center gap-1.5 ${mine ? "text-primary" : "text-foreground"}`}>
+          {message.author}
+          {mine && (
+            <span className="text-[10px] font-extrabold uppercase tracking-wide bg-primary text-primary-foreground px-1.5 py-0.5 rounded-full">
+              Vous
+            </span>
+          )}
+        </span>
         <div className="flex items-center gap-2 text-muted-foreground text-xs">
           <span className="flex items-center gap-0.5"><MapPin className="w-3 h-3" />{formatDistance(message.distance)}</span>
           <span className="flex items-center gap-0.5"><Clock className="w-3 h-3" />{timeAgo(message.timestamp)}</span>
