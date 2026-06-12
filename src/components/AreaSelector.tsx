@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { Store, GraduationCap, UtensilsCrossed, Building2, Trees, Church, Bus, ShoppingBag, Home, Briefcase, School, Stethoscope } from "lucide-react";
+import { Landmark, GraduationCap, UtensilsCrossed, Building2, Trees, Church, Bus, ShoppingBag, Home, Briefcase, School, Stethoscope } from "lucide-react";
 
 export interface Area {
   id: string;
@@ -30,7 +30,7 @@ export const AREA_NAMES: Record<string, string[]> = {
   university: ["Étudiant", "Camarade", "Intellectuel", "Penseur", "Chercheur"],
   highschool: ["Lycéen", "Élève", "Camarade", "Bachelier", "Étudiant"],
   supermarket: ["Client mystère", "Acheteur", "Consommateur", "Visiteur rayon"],
-  shop: ["Chineur", "Habitué", "Curieux", "Client discret"],
+  shop: ["Agent", "Fonctionnaire", "Usager", "Administré", "Visiteur"],
   restaurant: ["Gourmet", "Fin palais", "Convive", "Gastronome", "Affamé"],
   transport: ["Voyageur", "Passager", "Navetteur", "Nomade"],
   hospital: ["Visiteur", "Patient", "Accompagnant", "Soignant"],
