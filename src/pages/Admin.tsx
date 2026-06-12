@@ -139,6 +139,17 @@ export default function Admin() {
     );
   }
 
+  const q = search.trim().toLowerCase();
+  const filteredIdentities = identities.filter(
+    (u) => !q || u.full_name?.toLowerCase().includes(q) || u.phone?.toLowerCase().includes(q),
+  );
+  const filteredMessages = messages.filter(
+    (m) => !q || m.text?.toLowerCase().includes(q) || m.author?.toLowerCase().includes(q),
+  );
+  const filteredAlerts = alerts.filter(
+    (a) => !q || a.author_name?.toLowerCase().includes(q) || (a.message ?? "").toLowerCase().includes(q),
+  );
+
   const tabs: { id: Tab; label: string; icon: React.ElementType; count: number }[] = [
     { id: "users", label: "Utilisateurs", icon: Users, count: identities.length },
     { id: "messages", label: "Kongossas", icon: Megaphone, count: messages.length },
