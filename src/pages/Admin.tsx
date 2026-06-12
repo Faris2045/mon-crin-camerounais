@@ -298,3 +298,17 @@ function Stat({ label, value }: { label: string; value: number }) {
 function Empty({ text }: { text: string }) {
   return <p className="text-center text-muted-foreground text-sm py-10">{text}</p>;
 }
+
+function fmtDate(iso: string): string {
+  try {
+    return new Date(iso).toLocaleString("fr-FR", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  } catch {
+    return "";
+  }
+}
