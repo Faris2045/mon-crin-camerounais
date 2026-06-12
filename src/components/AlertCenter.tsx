@@ -17,7 +17,10 @@ function timeAgo(ts: number): string {
   const s = Math.floor((Date.now() - ts) / 1000);
   if (s < 60) return "à l'instant";
   if (s < 3600) return `il y a ${Math.floor(s / 60)} min`;
-  return `il y a ${Math.floor(s / 3600)} h`;
+  const h = Math.floor(s / 3600);
+  const min = Math.floor((s % 3600) / 60);
+  if (h < 24) return min > 0 ? `il y a ${h}h ${min}min` : `il y a ${h}h`;
+  return "il y a plus de 24h";
 }
 
 export default function AlertCenter({ alerts, myUserId, onResolve }: Props) {
