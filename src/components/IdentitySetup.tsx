@@ -134,8 +134,8 @@ export default function IdentitySetup({ open, onSubmit }: Props) {
               <div className="flex items-start gap-2 bg-muted rounded-xl p-3">
                 <KeyRound className="w-4 h-4 text-primary mt-0.5 shrink-0" />
                 <p className="text-[11px] text-muted-foreground leading-relaxed">
-                  Un code à 6 chiffres a été envoyé au <span className="font-bold">{phone}</span>.
-                  Entre-le ci-dessous pour vérifier ton numéro.
+                  Un code à 6 chiffres a été envoyé au <span className="font-bold">{phone}</span>{" "}
+                  (par WhatsApp). Entre-le ci-dessous pour vérifier ton numéro.
                 </p>
               </div>
 
