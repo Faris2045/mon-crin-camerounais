@@ -244,7 +244,7 @@ export default function Admin() {
         ))}
         {tab === "messages" && filteredMessages.length === 0 && <Empty text="Aucun kongossa" />}
 
-        {tab === "alerts" && alerts.map((a) => (
+        {tab === "alerts" && filteredAlerts.map((a) => (
           <div key={a.id} className="bg-card rounded-2xl p-4 shadow-sm border-2 border-destructive/30">
             <div className="flex items-center justify-between mb-1">
               <span className="font-bold text-sm text-foreground">{a.author_name}</span>
@@ -253,6 +253,7 @@ export default function Admin() {
               </span>
             </div>
             <p className="text-sm text-foreground">{a.message || "Demande d'aide d'urgence"}</p>
+            <p className="text-[10px] text-muted-foreground mb-1">{fmtDate(a.created_at)}</p>
             <a
               href={`https://www.google.com/maps/search/?api=1&query=${a.lat},${a.lng}`}
               target="_blank"
@@ -279,7 +280,7 @@ export default function Admin() {
             </div>
           </div>
         ))}
-        {tab === "alerts" && alerts.length === 0 && <Empty text="Aucune alerte" />}
+        {tab === "alerts" && filteredAlerts.length === 0 && <Empty text="Aucune alerte" />}
       </div>
     </div>
   );
