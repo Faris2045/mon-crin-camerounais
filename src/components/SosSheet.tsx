@@ -9,7 +9,16 @@ interface Props {
   locationError: boolean;
 }
 
-const QUICK_REASONS = ["Agression", "Accident", "Vol", "Incendie", "Malaise", "Danger"];
+const QUICK_REASONS = [
+  "Embouteillages",
+  "Inondation",
+  "Accident",
+  "Route coupée",
+  "Agression",
+  "Vol",
+  "Incendie",
+  "Panne (Électricité / Eau)",
+];
 
 export default function SosSheet({ open, onClose, onSend, locationError }: Props) {
   const [message, setMessage] = useState("");

@@ -15,7 +15,7 @@ export const AREAS: Area[] = [
   { id: "university", label: "Université", icon: GraduationCap, emoji: "🎓" },
   { id: "highschool", label: "Lycée", icon: School, emoji: "🏫" },
   { id: "supermarket", label: "Supermarché", icon: ShoppingBag, emoji: "🛒" },
-  { id: "shop", label: "Boutique", icon: Store, emoji: "🏪" },
+  { id: "shop", label: "Administration", icon: Landmark, emoji: "🏛️" },
   { id: "restaurant", label: "Restaurant", icon: UtensilsCrossed, emoji: "🍽️" },
   { id: "transport", label: "Transport", icon: Bus, emoji: "🚌" },
   { id: "hospital", label: "Hôpital", icon: Stethoscope, emoji: "🏥" },
