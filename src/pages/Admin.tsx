@@ -19,6 +19,7 @@ export default function Admin() {
   const [authed, setAuthed] = useState(false);
   const [loading, setLoading] = useState(false);
   const [tab, setTab] = useState<Tab>("users");
+  const [search, setSearch] = useState("");
 
   const [identities, setIdentities] = useState<Identity[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
