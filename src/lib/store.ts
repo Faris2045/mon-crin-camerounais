@@ -329,10 +329,13 @@ export function useKongossaStore() {
   const fetchAlerts = useCallback(async () => {
     if (!locationRef.current) return;
     const loc = locationRef.current;
+    // Alerts only live for 24h to avoid saturating the notifications tab
+    const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
     const { data, error } = await supabase
       .from("alerts")
       .select("*")
       .eq("status", "active")
+      .gt("created_at", since)
       .order("created_at", { ascending: false });
     if (error || !data) {
       console.error("Error fetching alerts:", error);
@@ -484,8 +487,11 @@ export function useKongossaStore() {
     commentsReceived: myMessages.reduce((sum, m) => sum + m.comments.length, 0),
   };
 
-  // Alerts sorted by proximity — urgency overrides the radius (everyone sees them)
-  const sortedAlerts = [...alerts].sort((a, b) => a.distance - b.distance);
+  // Alerts: most recent first, and only those from the last 24h
+  const DAY_MS = 24 * 60 * 60 * 1000;
+  const sortedAlerts = [...alerts]
+    .filter((a) => Date.now() - a.timestamp < DAY_MS)
+    .sort((a, b) => b.timestamp - a.timestamp);
   const myActiveAlert = sortedAlerts.find((a) => a.authorId === user.id);
 
   return {

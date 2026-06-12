@@ -19,6 +19,7 @@ export default function Admin() {
   const [authed, setAuthed] = useState(false);
   const [loading, setLoading] = useState(false);
   const [tab, setTab] = useState<Tab>("users");
+  const [search, setSearch] = useState("");
 
   const [identities, setIdentities] = useState<Identity[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -138,6 +139,17 @@ export default function Admin() {
     );
   }
 
+  const q = search.trim().toLowerCase();
+  const filteredIdentities = identities.filter(
+    (u) => !q || u.full_name?.toLowerCase().includes(q) || u.phone?.toLowerCase().includes(q),
+  );
+  const filteredMessages = messages.filter(
+    (m) => !q || m.text?.toLowerCase().includes(q) || m.author?.toLowerCase().includes(q),
+  );
+  const filteredAlerts = alerts.filter(
+    (a) => !q || a.author_name?.toLowerCase().includes(q) || (a.message ?? "").toLowerCase().includes(q),
+  );
+
   const tabs: { id: Tab; label: string; icon: React.ElementType; count: number }[] = [
     { id: "users", label: "Utilisateurs", icon: Users, count: identities.length },
     { id: "messages", label: "Kongossas", icon: Megaphone, count: messages.length },
@@ -186,13 +198,22 @@ export default function Admin() {
         })}
       </div>
 
+      <div className="px-4 mb-3">
+        <input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Rechercher (nom, téléphone, texte…)"
+          className="w-full bg-card border border-border rounded-xl px-4 py-2.5 text-sm text-foreground outline-none focus:ring-2 focus:ring-primary"
+        />
+      </div>
+
       <div className="px-4 space-y-2">
-        {tab === "users" && identities.map((u) => (
+        {tab === "users" && filteredIdentities.map((u) => (
           <div key={u.id} className="bg-card rounded-2xl p-4 shadow-sm flex items-center justify-between gap-3">
             <div className="min-w-0">
               <p className="font-bold text-foreground truncate">{u.full_name}</p>
               <p className="text-xs text-muted-foreground">{u.phone}</p>
-              <p className="text-[10px] text-muted-foreground/70">ID: {u.author_id}</p>
+              <p className="text-[10px] text-muted-foreground/70">Inscrit le {fmtDate(u.created_at)}</p>
             </div>
             <button
               onClick={() => deleteUser(u.author_id)}
@@ -202,9 +223,9 @@ export default function Admin() {
             </button>
           </div>
         ))}
-        {tab === "users" && identities.length === 0 && <Empty text="Aucun utilisateur enregistré" />}
+        {tab === "users" && filteredIdentities.length === 0 && <Empty text="Aucun utilisateur" />}
 
-        {tab === "messages" && messages.map((m) => (
+        {tab === "messages" && filteredMessages.map((m) => (
           <div key={m.id} className="bg-card rounded-2xl p-4 shadow-sm">
             <div className="flex items-center justify-between mb-1">
               <span className="font-bold text-sm text-foreground">{m.author}</span>
@@ -217,13 +238,13 @@ export default function Admin() {
             </div>
             <p className="text-sm text-foreground">{m.text}</p>
             <p className="text-[10px] text-muted-foreground mt-1">
-              ❤️ {m.likes} {m.reported ? "· ⚠️ signalé" : ""}
+              👍 {m.likes} · {fmtDate(m.created_at)} {m.reported ? "· ⚠️ signalé" : ""}
             </p>
           </div>
         ))}
-        {tab === "messages" && messages.length === 0 && <Empty text="Aucun kongossa" />}
+        {tab === "messages" && filteredMessages.length === 0 && <Empty text="Aucun kongossa" />}
 
-        {tab === "alerts" && alerts.map((a) => (
+        {tab === "alerts" && filteredAlerts.map((a) => (
           <div key={a.id} className="bg-card rounded-2xl p-4 shadow-sm border-2 border-destructive/30">
             <div className="flex items-center justify-between mb-1">
               <span className="font-bold text-sm text-foreground">{a.author_name}</span>
@@ -232,6 +253,7 @@ export default function Admin() {
               </span>
             </div>
             <p className="text-sm text-foreground">{a.message || "Demande d'aide d'urgence"}</p>
+            <p className="text-[10px] text-muted-foreground mb-1">{fmtDate(a.created_at)}</p>
             <a
               href={`https://www.google.com/maps/search/?api=1&query=${a.lat},${a.lng}`}
               target="_blank"
@@ -258,7 +280,7 @@ export default function Admin() {
             </div>
           </div>
         ))}
-        {tab === "alerts" && alerts.length === 0 && <Empty text="Aucune alerte" />}
+        {tab === "alerts" && filteredAlerts.length === 0 && <Empty text="Aucune alerte" />}
       </div>
     </div>
   );
@@ -275,4 +297,18 @@ function Stat({ label, value }: { label: string; value: number }) {
 
 function Empty({ text }: { text: string }) {
   return <p className="text-center text-muted-foreground text-sm py-10">{text}</p>;
+}
+
+function fmtDate(iso: string): string {
+  try {
+    return new Date(iso).toLocaleString("fr-FR", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  } catch {
+    return "";
+  }
 }

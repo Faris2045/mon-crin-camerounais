@@ -28,13 +28,45 @@ Deno.serve(async (req) => {
       code,
     });
 
-    // Try to send a real SMS via Twilio if configured
+    let smsSent = false;
+
+    // 1) Preferred: WhatsApp Cloud API (Meta) — free service messages, more professional
+    const waToken = Deno.env.get("WHATSAPP_TOKEN");
+    const waPhoneId = Deno.env.get("WHATSAPP_PHONE_NUMBER_ID");
+    if (waToken && waPhoneId) {
+      try {
+        // E.164 without leading "+" for the "to" field is also accepted with "+"
+        const to = normalized.startsWith("+") ? normalized.slice(1) : normalized;
+        const res = await fetch(
+          `https://graph.facebook.com/v21.0/${waPhoneId}/messages`,
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${waToken}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              messaging_product: "whatsapp",
+              to,
+              type: "text",
+              text: {
+                body: `KONGOSSA 🔐\nVotre code de vérification est : ${code}\nIl expire dans 10 minutes. Ne le partagez avec personne.`,
+              },
+            }),
+          },
+        );
+        smsSent = res.ok;
+        if (!res.ok) console.error("WhatsApp error:", await res.text());
+      } catch (e) {
+        console.error("WhatsApp send failed:", e);
+      }
+    }
+
+    // 2) Fallback: SMS via Twilio if configured and WhatsApp didn't send
     const sid = Deno.env.get("TWILIO_ACCOUNT_SID");
     const token = Deno.env.get("TWILIO_AUTH_TOKEN");
     const from = Deno.env.get("TWILIO_PHONE_NUMBER");
-    let smsSent = false;
-
-    if (sid && token && from) {
+    if (!smsSent && sid && token && from) {
       try {
         const body = new URLSearchParams({
           To: normalized,
@@ -58,6 +90,7 @@ Deno.serve(async (req) => {
         console.error("Twilio send failed:", e);
       }
     }
+
 
     // When no SMS provider is configured, return the code so testing works end-to-end.
     return new Response(
