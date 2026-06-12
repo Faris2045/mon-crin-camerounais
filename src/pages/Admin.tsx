@@ -198,13 +198,22 @@ export default function Admin() {
         })}
       </div>
 
+      <div className="px-4 mb-3">
+        <input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Rechercher (nom, téléphone, texte…)"
+          className="w-full bg-card border border-border rounded-xl px-4 py-2.5 text-sm text-foreground outline-none focus:ring-2 focus:ring-primary"
+        />
+      </div>
+
       <div className="px-4 space-y-2">
-        {tab === "users" && identities.map((u) => (
+        {tab === "users" && filteredIdentities.map((u) => (
           <div key={u.id} className="bg-card rounded-2xl p-4 shadow-sm flex items-center justify-between gap-3">
             <div className="min-w-0">
               <p className="font-bold text-foreground truncate">{u.full_name}</p>
               <p className="text-xs text-muted-foreground">{u.phone}</p>
-              <p className="text-[10px] text-muted-foreground/70">ID: {u.author_id}</p>
+              <p className="text-[10px] text-muted-foreground/70">Inscrit le {fmtDate(u.created_at)}</p>
             </div>
             <button
               onClick={() => deleteUser(u.author_id)}
@@ -214,7 +223,7 @@ export default function Admin() {
             </button>
           </div>
         ))}
-        {tab === "users" && identities.length === 0 && <Empty text="Aucun utilisateur enregistré" />}
+        {tab === "users" && filteredIdentities.length === 0 && <Empty text="Aucun utilisateur" />}
 
         {tab === "messages" && messages.map((m) => (
           <div key={m.id} className="bg-card rounded-2xl p-4 shadow-sm">
