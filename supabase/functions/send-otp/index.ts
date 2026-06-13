@@ -37,6 +37,44 @@ Deno.serve(async (req) => {
       try {
         // E.164 without leading "+" for the "to" field is also accepted with "+"
         const to = normalized.startsWith("+") ? normalized.slice(1) : normalized;
+
+        // Business-initiated OTP messages MUST use a pre-approved template
+        // (plain text only works within a 24h customer-service window).
+        // Configure WHATSAPP_TEMPLATE_NAME to use your approved authentication template.
+        const templateName = Deno.env.get("WHATSAPP_TEMPLATE_NAME");
+        const templateLang = Deno.env.get("WHATSAPP_TEMPLATE_LANG") || "fr";
+
+        const payload = templateName
+          ? {
+              messaging_product: "whatsapp",
+              to,
+              type: "template",
+              template: {
+                name: templateName,
+                language: { code: templateLang },
+                components: [
+                  {
+                    type: "body",
+                    parameters: [{ type: "text", text: code }],
+                  },
+                  {
+                    type: "button",
+                    sub_type: "url",
+                    index: "0",
+                    parameters: [{ type: "text", text: code }],
+                  },
+                ],
+              },
+            }
+          : {
+              messaging_product: "whatsapp",
+              to,
+              type: "text",
+              text: {
+                body: `KONGOSSA 🔐\nVotre code de vérification est : ${code}\nIl expire dans 10 minutes. Ne le partagez avec personne.`,
+              },
+            };
+
         const res = await fetch(
           `https://graph.facebook.com/v21.0/${waPhoneId}/messages`,
           {
@@ -45,14 +83,7 @@ Deno.serve(async (req) => {
               Authorization: `Bearer ${waToken}`,
               "Content-Type": "application/json",
             },
-            body: JSON.stringify({
-              messaging_product: "whatsapp",
-              to,
-              type: "text",
-              text: {
-                body: `KONGOSSA 🔐\nVotre code de vérification est : ${code}\nIl expire dans 10 minutes. Ne le partagez avec personne.`,
-              },
-            }),
+            body: JSON.stringify(payload),
           },
         );
         smsSent = res.ok;
