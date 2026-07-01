@@ -5,6 +5,15 @@ const config: CapacitorConfig = {
   appName: 'KONGOSSA',
   webDir: 'dist',
   backgroundColor: '#00C49A',
+  plugins: {
+    LocalNotifications: {
+      smallIcon: 'ic_stat_icon',
+      iconColor: '#00C49A',
+    },
+    PushNotifications: {
+      presentationOptions: ['badge', 'sound', 'alert'],
+    },
+  },
 };
 
 export default config;

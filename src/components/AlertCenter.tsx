@@ -1,11 +1,12 @@
 import { motion } from "framer-motion";
-import { Siren, MapPin, Navigation, CheckCircle2, ShieldCheck } from "lucide-react";
+import { Siren, MapPin, Navigation, CheckCircle2, ShieldCheck, Users } from "lucide-react";
 import type { KongossaAlert } from "@/lib/store";
 
 interface Props {
   alerts: KongossaAlert[];
   myUserId: string;
   onResolve: (id: string) => void;
+  onConfirm: (id: string) => void;
 }
 
 function formatDistance(d: number): string {
@@ -23,7 +24,7 @@ function timeAgo(ts: number): string {
   return "il y a plus de 24h";
 }
 
-export default function AlertCenter({ alerts, myUserId, onResolve }: Props) {
+export default function AlertCenter({ alerts, myUserId, onResolve, onConfirm }: Props) {
   const openMaps = (lat: number, lng: number) => {
     const isNative =
       typeof window !== "undefined" &&
@@ -63,7 +64,11 @@ export default function AlertCenter({ alerts, myUserId, onResolve }: Props) {
   return (
     <div className="space-y-3">
       <p className="text-xs text-muted-foreground font-semibold">
-        🚨 {alerts.length} alerte{alerts.length !== 1 ? "s" : ""} d'urgence en cours
+        🚨 {alerts.length} alerte{alerts.length !== 1 ? "s" : ""} pertinente{alerts.length !== 1 ? "s" : ""} en cours
+      </p>
+      <p className="text-[11px] text-muted-foreground">
+        Confirme une alerte si tu es témoin : les alertes confirmées par plusieurs personnes
+        sont priorisées, les autres disparaissent pour éviter la saturation.
       </p>
       {alerts.map((alert) => {
         const mine = alert.authorId === myUserId;
@@ -90,20 +95,44 @@ export default function AlertCenter({ alerts, myUserId, onResolve }: Props) {
                 <p className="text-sm text-foreground mt-0.5">
                   {alert.message || "Demande d'aide d'urgence"}
                 </p>
-                <div className="flex items-center gap-1 text-xs text-destructive font-bold mt-1.5">
-                  <MapPin className="w-3.5 h-3.5" />
-                  {formatDistance(alert.distance)} de toi
+                <div className="flex items-center gap-3 mt-1.5">
+                  <div className="flex items-center gap-1 text-xs text-destructive font-bold">
+                    <MapPin className="w-3.5 h-3.5" />
+                    {formatDistance(alert.distance)} de toi
+                  </div>
+                  {alert.confirmations > 0 && (
+                    <div className="flex items-center gap-1 text-xs text-primary font-bold">
+                      <Users className="w-3.5 h-3.5" />
+                      {alert.confirmations} confirmation{alert.confirmations !== 1 ? "s" : ""}
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex gap-2 mt-3">
                   {!mine && (
-                    <button
-                      onClick={() => openMaps(alert.lat, alert.lng)}
-                      className="flex-1 bg-destructive text-destructive-foreground font-bold text-sm py-2.5 rounded-xl flex items-center justify-center gap-1.5 active:scale-95 transition-transform"
-                    >
-                      <Navigation className="w-4 h-4" />
-                      Localiser
-                    </button>
+                    <>
+                      <button
+                        onClick={() => openMaps(alert.lat, alert.lng)}
+                        className="flex-1 bg-destructive text-destructive-foreground font-bold text-sm py-2.5 rounded-xl flex items-center justify-center gap-1.5 active:scale-95 transition-transform"
+                      >
+                        <Navigation className="w-4 h-4" />
+                        Localiser
+                      </button>
+                      {alert.confirmedBy.includes(myUserId) ? (
+                        <div className="flex-1 bg-primary/10 text-primary font-bold text-sm py-2.5 rounded-xl flex items-center justify-center gap-1.5">
+                          <CheckCircle2 className="w-4 h-4" />
+                          Confirmée
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => onConfirm(alert.id)}
+                          className="flex-1 border-2 border-primary text-primary font-bold text-sm py-2.5 rounded-xl flex items-center justify-center gap-1.5 active:scale-95 transition-transform"
+                        >
+                          <Users className="w-4 h-4" />
+                          Je confirme
+                        </button>
+                      )}
+                    </>
                   )}
                   {mine && (
                     <button

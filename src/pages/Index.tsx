@@ -101,7 +101,7 @@ export default function Index() {
       {/* Content */}
       <main className="px-4 pt-4">
         {tab === "alert" ? (
-          <AlertCenter alerts={store.alerts} myUserId={store.user.id} onResolve={store.resolveAlert} />
+          <AlertCenter alerts={store.alerts} myUserId={store.user.id} onResolve={store.resolveAlert} onConfirm={store.confirmAlert} />
         ) : tab === "settings" ? (
           <ProfilePanel
             username={store.user.name}

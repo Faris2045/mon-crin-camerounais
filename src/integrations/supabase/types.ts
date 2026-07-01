@@ -18,6 +18,8 @@ export type Database = {
         Row: {
           author_id: string
           author_name: string
+          confirmations: number
+          confirmed_by: string[]
           created_at: string
           id: string
           lat: number
@@ -29,6 +31,8 @@ export type Database = {
         Insert: {
           author_id: string
           author_name: string
+          confirmations?: number
+          confirmed_by?: string[]
           created_at?: string
           id?: string
           lat: number
@@ -40,6 +44,8 @@ export type Database = {
         Update: {
           author_id?: string
           author_name?: string
+          confirmations?: number
+          confirmed_by?: string[]
           created_at?: string
           id?: string
           lat?: number
@@ -57,6 +63,9 @@ export type Database = {
           created_at: string
           id: string
           message_id: string
+          reply_to_author: string | null
+          reply_to_id: string | null
+          reply_to_text: string | null
           text: string
         }
         Insert: {
@@ -65,6 +74,9 @@ export type Database = {
           created_at?: string
           id?: string
           message_id: string
+          reply_to_author?: string | null
+          reply_to_id?: string | null
+          reply_to_text?: string | null
           text: string
         }
         Update: {
@@ -73,6 +85,9 @@ export type Database = {
           created_at?: string
           id?: string
           message_id?: string
+          reply_to_author?: string | null
+          reply_to_id?: string | null
+          reply_to_text?: string | null
           text?: string
         }
         Relationships: [
@@ -89,6 +104,7 @@ export type Database = {
         Row: {
           author_id: string
           created_at: string
+          fingerprint: string | null
           full_name: string
           id: string
           phone: string
@@ -96,6 +112,7 @@ export type Database = {
         Insert: {
           author_id: string
           created_at?: string
+          fingerprint?: string | null
           full_name: string
           id?: string
           phone: string
@@ -103,6 +120,7 @@ export type Database = {
         Update: {
           author_id?: string
           created_at?: string
+          fingerprint?: string | null
           full_name?: string
           id?: string
           phone?: string
