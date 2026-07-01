@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { User, Phone, Lock, ShieldCheck, KeyRound } from "lucide-react";
+import { User, Phone, ShieldCheck, KeyRound, Fingerprint } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { getDeviceFingerprint } from "@/lib/fingerprint";
 import logo from "@/assets/kongossa-logo.png";
 
 interface Props {
@@ -52,8 +53,15 @@ export default function IdentitySetup({ open, onSubmit }: Props) {
     }
     setError("");
     setLoading(true);
+    // Open-source hardware fingerprint (FingerprintJS) — anti-fraud & anti-duplicate.
+    const fingerprint = await getDeviceFingerprint().catch(() => undefined);
     const { data, error: fnError } = await supabase.functions.invoke("verify-otp", {
-      body: { phone: phone.trim(), code: code.trim() },
+      body: {
+        phone: phone.trim(),
+        code: code.trim(),
+        fullName: fullName.trim(),
+        fingerprint,
+      },
     });
     setLoading(false);
     if (fnError || !data?.ok) {
@@ -118,6 +126,15 @@ export default function IdentitySetup({ open, onSubmit }: Props) {
                 <p className="text-[11px] text-foreground/80 leading-relaxed">
                   🔒 Les informations liées à votre identité sont chiffrées et protégées. Elles ne
                   sont jamais visibles par les autres utilisateurs ni partagées.
+                </p>
+              </div>
+
+              <div className="flex items-start gap-2 bg-secondary/10 rounded-xl p-3">
+                <Fingerprint className="w-4 h-4 text-secondary mt-0.5 shrink-0" />
+                <p className="text-[11px] text-foreground/80 leading-relaxed">
+                  🛡️ Une empreinte matérielle sécurisée de votre appareil est enregistrée
+                  (technologie open-source). Elle empêche les comptes en double et permet aux
+                  autorités de tracer tout usage frauduleux.
                 </p>
               </div>
 
