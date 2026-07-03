@@ -183,7 +183,7 @@ export default function IdentitySetup({ open, onSubmit }: Props) {
               <button
                 onClick={sendCode}
                 disabled={loading}
-                className={`w-full bg-${accent} text-${accent}-foreground font-extrabold py-3.5 rounded-xl active:scale-95 transition-transform disabled:opacity-60`}
+                className={`w-full ${accentBtn} font-extrabold py-3.5 rounded-xl active:scale-95 transition-transform disabled:opacity-60`}
               >
                 {loading ? "Envoi du code…" : "Recevoir le code de vérification"}
               </button>
@@ -231,7 +231,7 @@ export default function IdentitySetup({ open, onSubmit }: Props) {
               <button
                 onClick={verifyCode}
                 disabled={loading}
-                className={`w-full bg-${accent} text-${accent}-foreground font-extrabold py-3.5 rounded-xl active:scale-95 transition-transform disabled:opacity-60`}
+                className={`w-full ${accentBtn} font-extrabold py-3.5 rounded-xl active:scale-95 transition-transform disabled:opacity-60`}
               >
                 {loading ? "Vérification…" : isLogin ? "Se connecter" : "Vérifier et continuer"}
               </button>
