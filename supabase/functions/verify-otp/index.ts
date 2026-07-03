@@ -7,7 +7,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { phone, code, fullName, fingerprint } = await req.json();
+    const { phone, code, fullName, fingerprint, mode } = await req.json();
     if (!phone || !code) {
       return new Response(JSON.stringify({ error: "Données manquantes" }), {
         status: 400,
