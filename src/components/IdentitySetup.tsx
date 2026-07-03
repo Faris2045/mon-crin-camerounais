@@ -86,7 +86,9 @@ export default function IdentitySetup({ open, onSubmit }: Props) {
     onSubmit(resolvedName, phone.trim());
   };
 
-  const accent = isLogin ? "secondary" : "primary";
+  const accentBtn = isLogin
+    ? "bg-secondary text-secondary-foreground"
+    : "bg-primary text-primary-foreground";
 
   return (
     <div className="fixed inset-0 z-[60] bg-background flex flex-col">
