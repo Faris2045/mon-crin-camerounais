@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { User, Phone, ShieldCheck, KeyRound, Fingerprint } from "lucide-react";
+import { User, Phone, ShieldCheck, KeyRound, Fingerprint, LogIn, UserPlus, ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getDeviceFingerprint } from "@/lib/fingerprint";
 import logo from "@/assets/kongossa-logo.png";
@@ -10,7 +10,10 @@ interface Props {
   onSubmit: (fullName: string, phone: string) => void;
 }
 
+type Mode = "choose" | "signup" | "login";
+
 export default function IdentitySetup({ open, onSubmit }: Props) {
+  const [mode, setMode] = useState<Mode>("choose");
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
   const [code, setCode] = useState("");
@@ -21,10 +24,19 @@ export default function IdentitySetup({ open, onSubmit }: Props) {
 
   if (!open) return null;
 
+  const isLogin = mode === "login";
+
+  const resetFlow = (m: Mode) => {
+    setMode(m);
+    setStep("info");
+    setError("");
+    setCode("");
+    setDevCode(null);
+  };
+
   const sendCode = async () => {
-    const name = fullName.trim();
     const tel = phone.trim();
-    if (name.length < 2) {
+    if (!isLogin && fullName.trim().length < 2) {
       setError("Entre ton nom (au moins 2 lettres).");
       return;
     }
@@ -59,8 +71,9 @@ export default function IdentitySetup({ open, onSubmit }: Props) {
       body: {
         phone: phone.trim(),
         code: code.trim(),
-        fullName: fullName.trim(),
+        fullName: isLogin ? undefined : fullName.trim(),
         fingerprint,
+        mode: isLogin ? "login" : "signup",
       },
     });
     setLoading(false);
@@ -68,8 +81,14 @@ export default function IdentitySetup({ open, onSubmit }: Props) {
       setError(data?.error || "Code incorrect.");
       return;
     }
-    onSubmit(fullName.trim(), phone.trim());
+    // On login, the name comes back from the server; on signup we use the typed name.
+    const resolvedName = (data.fullName && String(data.fullName)) || fullName.trim();
+    onSubmit(resolvedName, phone.trim());
   };
+
+  const accentBtn = isLogin
+    ? "bg-secondary text-secondary-foreground"
+    : "bg-primary text-primary-foreground";
 
   return (
     <div className="fixed inset-0 z-[60] bg-background flex flex-col">
@@ -81,31 +100,51 @@ export default function IdentitySetup({ open, onSubmit }: Props) {
         >
           <div className="text-center mb-7">
             <img src={logo} alt="KONGOSSA" className="w-20 h-20 object-contain mx-auto mb-4" />
-            <h1 className="text-2xl font-black text-foreground tracking-wide">IDENTITÉ CONFIDENTIELLE</h1>
+            <h1 className="text-2xl font-black text-foreground tracking-wide">
+              {mode === "choose" ? "BIENVENUE SUR KONGOSSA" : isLogin ? "SE CONNECTER" : "CRÉER UN COMPTE"}
+            </h1>
             <p className="text-xs font-bold text-primary mt-2">
               🔒 Anonyme pour les autres. Vérifié pour la sécurité.
             </p>
-            <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
-              Votre identité réelle reste strictement confidentielle. Votre nom et votre numéro de
-              téléphone ne sont <span className="font-bold text-foreground">jamais visibles</span> par
-              les autres utilisateurs. Ces informations servent uniquement à sécuriser la communauté
-              et à lutter contre les faux comptes et les abus.
-            </p>
           </div>
 
-          {step === "info" ? (
+          {/* ---------- CHOICE SCREEN ---------- */}
+          {mode === "choose" && (
+            <div className="space-y-3">
+              <p className="text-sm text-muted-foreground text-center leading-relaxed mb-4">
+                Déjà un compte ? Connecte-toi. Sinon, crée ton compte en quelques secondes.
+              </p>
+              <button
+                onClick={() => resetFlow("signup")}
+                className="w-full bg-primary text-primary-foreground font-extrabold py-3.5 rounded-xl active:scale-95 transition-transform flex items-center justify-center gap-2"
+              >
+                <UserPlus className="w-5 h-5" /> Créer un compte
+              </button>
+              <button
+                onClick={() => resetFlow("login")}
+                className="w-full bg-secondary text-secondary-foreground font-extrabold py-3.5 rounded-xl active:scale-95 transition-transform flex items-center justify-center gap-2"
+              >
+                <LogIn className="w-5 h-5" /> J'ai déjà un compte
+              </button>
+            </div>
+          )}
+
+          {/* ---------- INFO STEP (signup + login) ---------- */}
+          {mode !== "choose" && step === "info" && (
             <div className="space-y-4">
-              <div>
-                <label className="text-xs font-bold text-foreground mb-1.5 flex items-center gap-1.5">
-                  <User className="w-3.5 h-3.5" /> Nom
-                </label>
-                <input
-                  value={fullName}
-                  onChange={(e) => { setFullName(e.target.value); setError(""); }}
-                  placeholder="Ex: Jean Mbarga"
-                  className="w-full bg-card border border-border rounded-xl px-4 py-3 text-foreground outline-none focus:ring-2 focus:ring-primary"
-                />
-              </div>
+              {!isLogin && (
+                <div>
+                  <label className="text-xs font-bold text-foreground mb-1.5 flex items-center gap-1.5">
+                    <User className="w-3.5 h-3.5" /> Nom
+                  </label>
+                  <input
+                    value={fullName}
+                    onChange={(e) => { setFullName(e.target.value); setError(""); }}
+                    placeholder="Ex: Jean Mbarga"
+                    className="w-full bg-card border border-border rounded-xl px-4 py-3 text-foreground outline-none focus:ring-2 focus:ring-primary"
+                  />
+                </div>
+              )}
               <div>
                 <label className="text-xs font-bold text-foreground mb-1.5 flex items-center gap-1.5">
                   <Phone className="w-3.5 h-3.5" /> Numéro de téléphone
@@ -121,38 +160,50 @@ export default function IdentitySetup({ open, onSubmit }: Props) {
 
               {error && <p className="text-xs font-semibold text-destructive">{error}</p>}
 
-              <div className="flex items-start gap-2 bg-primary/10 rounded-xl p-3">
-                <ShieldCheck className="w-4 h-4 text-primary mt-0.5 shrink-0" />
-                <p className="text-[11px] text-foreground/80 leading-relaxed">
-                  🔒 Les informations liées à votre identité sont chiffrées et protégées. Elles ne
-                  sont jamais visibles par les autres utilisateurs ni partagées.
-                </p>
-              </div>
-
-              <div className="flex items-start gap-2 bg-secondary/10 rounded-xl p-3">
-                <Fingerprint className="w-4 h-4 text-secondary mt-0.5 shrink-0" />
-                <p className="text-[11px] text-foreground/80 leading-relaxed">
-                  🛡️ Une empreinte matérielle sécurisée de votre appareil est enregistrée
-                  (technologie open-source). Elle empêche les comptes en double et permet aux
-                  autorités de tracer tout usage frauduleux.
-                </p>
-              </div>
+              {!isLogin && (
+                <>
+                  <div className="flex items-start gap-2 bg-primary/10 rounded-xl p-3">
+                    <ShieldCheck className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+                    <p className="text-[11px] text-foreground/80 leading-relaxed">
+                      🔒 Ton nom et ton numéro ne sont jamais visibles par les autres utilisateurs.
+                      Ils servent uniquement à sécuriser la communauté.
+                    </p>
+                  </div>
+                  <div className="flex items-start gap-2 bg-secondary/10 rounded-xl p-3">
+                    <Fingerprint className="w-4 h-4 text-secondary mt-0.5 shrink-0" />
+                    <p className="text-[11px] text-foreground/80 leading-relaxed">
+                      🛡️ Une empreinte matérielle sécurisée de ton appareil est enregistrée
+                      (technologie open-source). Elle empêche les comptes en double et permet aux
+                      autorités de tracer tout usage frauduleux.
+                    </p>
+                  </div>
+                </>
+              )}
 
               <button
                 onClick={sendCode}
                 disabled={loading}
-                className="w-full bg-primary text-primary-foreground font-extrabold py-3.5 rounded-xl active:scale-95 transition-transform disabled:opacity-60"
+                className={`w-full ${accentBtn} font-extrabold py-3.5 rounded-xl active:scale-95 transition-transform disabled:opacity-60`}
               >
                 {loading ? "Envoi du code…" : "Recevoir le code de vérification"}
               </button>
+              <button
+                onClick={() => resetFlow("choose")}
+                className="w-full text-muted-foreground font-semibold text-sm py-2 flex items-center justify-center gap-1.5"
+              >
+                <ArrowLeft className="w-4 h-4" /> Retour
+              </button>
             </div>
-          ) : (
+          )}
+
+          {/* ---------- VERIFY STEP ---------- */}
+          {mode !== "choose" && step === "verify" && (
             <div className="space-y-4">
               <div className="flex items-start gap-2 bg-muted rounded-xl p-3">
                 <KeyRound className="w-4 h-4 text-primary mt-0.5 shrink-0" />
                 <p className="text-[11px] text-muted-foreground leading-relaxed">
                   Un code à 6 chiffres a été envoyé au <span className="font-bold">{phone}</span>{" "}
-                  (par WhatsApp). Entre-le ci-dessous pour vérifier ton numéro.
+                  (par WhatsApp). Entre-le ci-dessous pour {isLogin ? "te connecter" : "vérifier ton numéro"}.
                 </p>
               </div>
 
@@ -180,15 +231,15 @@ export default function IdentitySetup({ open, onSubmit }: Props) {
               <button
                 onClick={verifyCode}
                 disabled={loading}
-                className="w-full bg-primary text-primary-foreground font-extrabold py-3.5 rounded-xl active:scale-95 transition-transform disabled:opacity-60"
+                className={`w-full ${accentBtn} font-extrabold py-3.5 rounded-xl active:scale-95 transition-transform disabled:opacity-60`}
               >
-                {loading ? "Vérification…" : "Vérifier et continuer"}
+                {loading ? "Vérification…" : isLogin ? "Se connecter" : "Vérifier et continuer"}
               </button>
               <button
                 onClick={() => { setStep("info"); setCode(""); setError(""); }}
                 className="w-full text-muted-foreground font-semibold text-sm py-2"
               >
-                Modifier mes informations
+                {isLogin ? "Modifier mon numéro" : "Modifier mes informations"}
               </button>
             </div>
           )}

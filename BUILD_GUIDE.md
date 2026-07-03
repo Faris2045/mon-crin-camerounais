@@ -1,85 +1,111 @@
-# 📱 KONGOSSA — Guide de build (APK, Release & iOS/IPA)
+# 📱 KONGOSSA — Build Android (APK) de A à Z
 
-Ce guide explique comment générer :
-- l'**APK de test** (Android)
-- l'**APK/AAB de release signé** (Play Store)
-- l'**app iOS / IPA** (Apple)
-
-> Prérequis communs : Node 18+ et `bun` (ou npm), le projet cloné, puis `bun install`.
+Ce guide part de **zéro** : cloner ton dépôt GitHub → générer l'APK installable.
+(On se concentre uniquement sur **Android**. iOS = plus tard.)
 
 ---
 
-## 0. Préparer le projet (une seule fois)
+## ⚠️ Pourquoi tes modifications n'apparaissaient pas dans l'APK
 
-```bash
-# À la racine du projet cloné
-bun install
+L'APK n'embarque **PAS** automatiquement ton dernier code. Deux règles :
 
-# Ajouter les plateformes natives (si le dossier android/ ou ios/ n'existe pas encore)
-bunx cap add android
-bunx cap add ios        # macOS uniquement
-```
+1. Le dossier `android/` contient une **copie figée** de l'app web. Tant que tu
+   ne fais pas `bun run build && npx cap sync android`, l'APK réutilise
+   l'ancienne version → tes nouveautés (login/signup, empreinte…) sont invisibles.
+2. Il ne doit **PAS** y avoir de `server.url` dans `capacitor.config.ts` pour une
+   vraie release. Si `server.url` pointe vers l'aperçu Lovable, l'app installée
+   charge le site en ligne au lieu de ton build local. ✅ Notre `capacitor.config.ts`
+   n'a **aucun** `server.url` — c'est correct pour produire un vrai APK.
 
-À chaque modification du code web, il faut **re-builder puis synchroniser** :
-
-```bash
-bun run build           # génère /dist
-bunx cap sync           # copie le web + plugins dans android/ et ios/
-```
-
-Plugins natifs déjà installés et utilisés :
-`@capacitor/local-notifications`, `@capacitor/haptics`, `@capacitor/push-notifications`, `@fingerprintjs/fingerprintjs`.
+👉 **La bonne séquence est toujours : `git pull` → `build` → `cap sync` → `gradlew`.**
 
 ---
 
-## 1. 🤖 Android — APK de test (debug)
+## 0. Prérequis (une seule fois)
+
+- **Node 18+** et **bun** (ou npm)
+- **Java JDK 17**
+- **Android Studio** (fournit le SDK Android + `gradle`) — ouvre-le au moins une fois.
+
+---
+
+## 1. Cloner ton projet depuis GitHub
 
 ```bash
-bun run build
-bunx cap sync android
+git clone https://github.com/TON_UTILISATEUR/TON_REPO.git kongossa
+cd kongossa
+bun install          # ou: npm install
+```
+
+> Plus tard, quand tu reviens : `git pull` puis `bun install`.
+
+---
+
+## 2. Ajouter la plateforme Android (une seule fois)
+
+Si le dossier `android/` n'existe pas encore :
+
+```bash
+npx cap add android
+```
+
+S'il existe déjà, saute cette étape.
+
+---
+
+## 3. 🔁 Construire le web + synchroniser (À CHAQUE MODIF)
+
+```bash
+bun run build            # génère /dist avec ton dernier code
+npx cap sync android     # copie /dist + plugins dans android/
+```
+
+Plugins natifs déjà inclus : `@capacitor/local-notifications`,
+`@capacitor/haptics`, `@capacitor/push-notifications`, `@fingerprintjs/fingerprintjs`.
+
+---
+
+## 4. 🤖 APK de test (debug)
+
+```bash
 cd android
 ./gradlew assembleDebug
 ```
 
-APK généré ici :
+APK généré :
 ```
 android/app/build/outputs/apk/debug/app-debug.apk
 ```
-👉 Transférez ce fichier sur le téléphone et installez-le (autorisez « sources inconnues »).
 
-Ou ouvrez le projet dans Android Studio et cliquez **Run ▶** :
-```bash
-bunx cap open android
-```
+Transfère-le sur ton téléphone et installe-le (active « sources inconnues »).
+
+> Alternative : `npx cap open android` puis **Run ▶** dans Android Studio.
 
 ---
 
-## 2. 🤖 Android — APK / AAB de RELEASE signé (Play Store)
+## 5. 🔐 APK / AAB de RELEASE signé
 
-### a) Créer une clé de signature (une seule fois)
+### a) Créer une clé (une seule fois)
 ```bash
 keytool -genkey -v -keystore kongossa.keystore \
   -alias kongossa -keyalg RSA -keysize 2048 -validity 10000
 ```
-Conservez précieusement `kongossa.keystore` et les mots de passe.
 
-### b) Déclarer la clé — `android/key.properties`
+### b) `android/key.properties`
 ```properties
-storePassword=VOTRE_MDP
-keyPassword=VOTRE_MDP
+storePassword=TON_MDP
+keyPassword=TON_MDP
 keyAlias=kongossa
 storeFile=../../kongossa.keystore
 ```
 
-### c) Configurer la signature dans `android/app/build.gradle`
-Dans `android { ... }`, ajoutez avant `buildTypes` :
+### c) `android/app/build.gradle`, avant `buildTypes` :
 ```gradle
 def keystoreProperties = new Properties()
 def keystorePropertiesFile = rootProject.file("key.properties")
 if (keystorePropertiesFile.exists()) {
     keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
 }
-
 signingConfigs {
     release {
         keyAlias keystoreProperties['keyAlias']
@@ -89,85 +115,38 @@ signingConfigs {
     }
 }
 ```
-Puis dans `buildTypes { release { ... } }` :
-```gradle
-signingConfig signingConfigs.release
-minifyEnabled true
-shrinkResources true
-```
+Puis dans `buildTypes { release { ... } }` : `signingConfig signingConfigs.release`
 
-### d) Générer les fichiers de release
+### d) Générer
 ```bash
-bun run build && bunx cap sync android
+bun run build && npx cap sync android
 cd android
-
-# APK signé (installation directe)
-./gradlew assembleRelease
-# -> android/app/build/outputs/apk/release/app-release.apk
-
-# AAB signé (à uploader sur le Google Play Store)
-./gradlew bundleRelease
-# -> android/app/build/outputs/bundle/release/app-release.aab
+./gradlew assembleRelease   # app/build/outputs/apk/release/app-release.apk
+./gradlew bundleRelease     # app/build/outputs/bundle/release/app-release.aab
 ```
 
 ---
 
-## 3. 🍎 iOS / IPA (Apple) — macOS + Xcode requis
-
-> ⚠️ La génération d'un `.ipa` **nécessite un Mac avec Xcode** et un compte Apple Developer.
+## 6. ⚡ Aide-mémoire (copie-colle)
 
 ```bash
+git pull
+bun install
 bun run build
-bunx cap sync ios
-bunx cap open ios     # ouvre le projet dans Xcode
-```
-
-Dans **Xcode** :
-1. Sélectionnez le projet **App** → onglet **Signing & Capabilities**.
-2. Choisissez votre **Team** (Apple Developer) → le signing est automatique.
-3. Ajoutez les capacités **Push Notifications** et **Background Modes → Remote notifications** (si vous activez le push serveur).
-4. Menu **Product → Archive**.
-5. Dans l'Organizer : **Distribute App** → **App Store Connect** (publication) ou **Ad Hoc / Development** (fichier `.ipa` à installer).
-
-L'export produit un fichier **`Kongossa.ipa`**.
-
----
-
-## 4. 🔔 À propos des notifications (comme WhatsApp, app fermée)
-
-- **Notifications locales + vibration/son** (nouveau commentaire, réponse, alerte SOS proche) :
-  ✅ déjà intégrées via `@capacitor/local-notifications` + `@capacitor/haptics`.
-  Elles fonctionnent **quand l'app tourne** (premier plan ou arrière-plan récent).
-
-- **Notifications PUSH quand l'app est totalement fermée** :
-  nécessitent un service serveur de push.
-  - Android → **Firebase Cloud Messaging (FCM)** : ajoutez `google-services.json` dans `android/app/`.
-  - iOS → **APNs (Apple Push Notification service)** : clé `.p8` depuis le portail Apple Developer.
-  Le plugin `@capacitor/push-notifications` est **déjà installé** ; il ne reste qu'à fournir ces
-  fichiers de configuration et une petite fonction serveur pour émettre les push.
-
----
-
-## 5. 🔐 Sécurité & anti-fraude (résumé technique)
-
-- **Empreinte matérielle open-source** (FingerprintJS) générée à l'inscription et stockée avec
-  l'identité (`identity_traces.fingerprint`) — usage réservé aux autorités en cas de fraude/abus.
-- **Anti-doublon** géré côté serveur (`verify-otp`) :
-  - même numéro déjà utilisé sur un **autre appareil** → inscription bloquée ;
-  - même appareil déjà lié à un **autre numéro** → inscription bloquée ;
-  - même numéro + même appareil → reconnu comme retour légitime.
-- **Vérification du numéro** par code OTP (WhatsApp/SMS).
-
----
-
-## 6. ⚡ Commande rapide (rappel)
-
-```bash
-bun run build && bunx cap sync
-# Android debug
+npx cap sync android
 cd android && ./gradlew assembleDebug
-# Android release (AAB)
-cd android && ./gradlew bundleRelease
-# iOS
-bunx cap open ios   # puis Product > Archive dans Xcode
+# APK : android/app/build/outputs/apk/debug/app-debug.apk
 ```
+
+---
+
+## 7. Déjà intégré dans l'app
+
+- **Connexion / Inscription** : écran d'accueil avec « Créer un compte »
+  (nom + numéro + code) ou « J'ai déjà un compte » (numéro + code, nom récupéré auto).
+- **Empreinte matérielle** (FingerprintJS OSS) pour l'anti-fraude et le traçage autorités.
+- **Notifications locales + vibration/son** (commentaires, réponses, SOS proches).
+- **Commentaires différenciés par couleur** + réponse à un commentaire précis.
+
+> Notifications quand l'app est **fermée** : nécessitent Firebase Cloud Messaging
+> (`google-services.json` dans `android/app/`). Le plugin est déjà installé.
