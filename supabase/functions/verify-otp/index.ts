@@ -60,24 +60,49 @@ Deno.serve(async (req) => {
     // 2) Anti-duplicate / anti-fraud check (service role bypasses RLS)
     const { data: existing } = await supabase
       .from("identity_traces")
-      .select("id, phone, fingerprint")
+      .select("id, phone, fingerprint, full_name")
       .or(
         `phone.eq.${normalized}${fingerprint ? `,fingerprint.eq.${fingerprint}` : ""}`,
       )
       .limit(5);
 
-    if (existing && existing.length > 0) {
-      const samePhone = existing.find((e: { phone: string }) => e.phone === normalized);
-      const sameDevice = existing.find(
-        (e: { fingerprint: string | null }) => fingerprint && e.fingerprint === fingerprint,
-      );
+    const samePhone = existing?.find((e: { phone: string }) => e.phone === normalized);
+    const sameDevice = existing?.find(
+      (e: { fingerprint: string | null }) => fingerprint && e.fingerprint === fingerprint,
+    );
 
+    // ===== LOGIN mode: an account MUST already exist for this phone =====
+    if (mode === "login") {
+      if (!samePhone) {
+        return new Response(
+          JSON.stringify({
+            ok: false,
+            error: "Aucun compte trouvé pour ce numéro. Crée un compte d'abord.",
+          }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+      // Keep the fingerprint fresh (e.g. after reinstall) for this returning user.
+      if (fingerprint && samePhone.fingerprint !== fingerprint) {
+        await supabase
+          .from("identity_traces")
+          .update({ fingerprint: String(fingerprint).slice(0, 128) })
+          .eq("id", samePhone.id);
+      }
+      return new Response(
+        JSON.stringify({ ok: true, status: "login", fullName: samePhone.full_name ?? "" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
+    // ===== SIGNUP mode =====
+    if (existing && existing.length > 0) {
       // Same phone already registered on a DIFFERENT device → likely fraud, block.
       if (samePhone && (!fingerprint || samePhone.fingerprint !== fingerprint)) {
         return new Response(
           JSON.stringify({
             ok: false,
-            error: "Ce numéro possède déjà un compte KONGOSSA sur un autre appareil.",
+            error: "Ce numéro possède déjà un compte KONGOSSA. Utilise « Se connecter ».",
           }),
           { headers: { ...corsHeaders, "Content-Type": "application/json" } },
         );
@@ -93,9 +118,10 @@ Deno.serve(async (req) => {
         );
       }
       // Same phone + same device = legitimate returning user → allow, no new row.
-      return new Response(JSON.stringify({ ok: true, status: "returning" }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return new Response(
+        JSON.stringify({ ok: true, status: "returning", fullName: samePhone?.full_name ?? fullName ?? "" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
     }
 
     // 3) Register the identity trace (private, for authorities only)
