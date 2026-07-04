@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { User, Phone, ShieldCheck, KeyRound, Fingerprint, LogIn, UserPlus, ArrowLeft } from "lucide-react";
+import { User, Phone, KeyRound, Fingerprint, LogIn, UserPlus, ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getDeviceFingerprint } from "@/lib/fingerprint";
+import { verifyFingerprint } from "@/lib/biometric";
 import logo from "@/assets/kongossa-logo.png";
 
 interface Props {
@@ -14,13 +15,13 @@ type Mode = "choose" | "signup" | "login";
 
 export default function IdentitySetup({ open, onSubmit }: Props) {
   const [mode, setMode] = useState<Mode>("choose");
-  const [fullName, setFullName] = useState("");
+  const [username, setUsername] = useState("");
   const [phone, setPhone] = useState("");
-  const [code, setCode] = useState("");
-  const [step, setStep] = useState<"info" | "verify">("info");
+  const [identifier, setIdentifier] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [devCode, setDevCode] = useState<string | null>(null);
+  const [scanning, setScanning] = useState(false);
 
   if (!open) return null;
 
@@ -28,62 +29,60 @@ export default function IdentitySetup({ open, onSubmit }: Props) {
 
   const resetFlow = (m: Mode) => {
     setMode(m);
-    setStep("info");
     setError("");
-    setCode("");
-    setDevCode(null);
+    setPassword("");
+    setScanning(false);
   };
 
-  const sendCode = async () => {
+  // After credentials are validated, require the fingerprint before logging in.
+  const runFingerprintAndFinish = async (resolvedName: string, resolvedPhone: string) => {
+    setScanning(true);
+    setError("");
+    const fp = await verifyFingerprint();
+    setScanning(false);
+    if (!fp.ok) {
+      setError(fp.error || "Vérification par empreinte requise.");
+      return;
+    }
+    onSubmit(resolvedName, resolvedPhone);
+  };
+
+  const handleSignup = async () => {
+    const name = username.trim();
     const tel = phone.trim();
-    if (!isLogin && fullName.trim().length < 2) {
-      setError("Entre ton nom (au moins 2 lettres).");
-      return;
-    }
-    if (!/^[+0-9\s]{8,15}$/.test(tel)) {
-      setError("Entre un numéro de téléphone valide.");
-      return;
-    }
+    if (name.length < 2) return setError("Entre un nom d'utilisateur (min. 2 lettres).");
+    if (!/^[+0-9\s]{8,15}$/.test(tel)) return setError("Entre un numéro de téléphone valide.");
+    if (password.length < 6) return setError("Mot de passe trop court (min. 6 caractères).");
+
     setError("");
     setLoading(true);
-    const { data, error: fnError } = await supabase.functions.invoke("send-otp", {
-      body: { phone: tel },
+    const fingerprint = await getDeviceFingerprint().catch(() => undefined);
+    const { data, error: fnError } = await supabase.functions.invoke("signup", {
+      body: { username: name, phone: tel, password, fingerprint },
     });
     setLoading(false);
     if (fnError || !data?.ok) {
-      setError("Impossible d'envoyer le code. Réessaie.");
-      return;
+      return setError(data?.error || "Impossible de créer le compte. Réessaie.");
     }
-    setDevCode(data.devCode ?? null);
-    setStep("verify");
+    await runFingerprintAndFinish(name, tel);
   };
 
-  const verifyCode = async () => {
-    if (code.trim().length !== 6) {
-      setError("Entre le code à 6 chiffres.");
-      return;
-    }
+  const handleLogin = async () => {
+    const id = identifier.trim();
+    if (!id) return setError("Entre ton nom ou ton numéro.");
+    if (!password) return setError("Entre ton mot de passe.");
+
     setError("");
     setLoading(true);
-    // Open-source hardware fingerprint (FingerprintJS) — anti-fraud & anti-duplicate.
     const fingerprint = await getDeviceFingerprint().catch(() => undefined);
-    const { data, error: fnError } = await supabase.functions.invoke("verify-otp", {
-      body: {
-        phone: phone.trim(),
-        code: code.trim(),
-        fullName: isLogin ? undefined : fullName.trim(),
-        fingerprint,
-        mode: isLogin ? "login" : "signup",
-      },
+    const { data, error: fnError } = await supabase.functions.invoke("login", {
+      body: { identifier: id, password, fingerprint },
     });
     setLoading(false);
     if (fnError || !data?.ok) {
-      setError(data?.error || "Code incorrect.");
-      return;
+      return setError(data?.error || "Connexion impossible.");
     }
-    // On login, the name comes back from the server; on signup we use the typed name.
-    const resolvedName = (data.fullName && String(data.fullName)) || fullName.trim();
-    onSubmit(resolvedName, phone.trim());
+    await runFingerprintAndFinish(data.account.username, data.account.phone);
   };
 
   const accentBtn = isLogin
@@ -103,9 +102,6 @@ export default function IdentitySetup({ open, onSubmit }: Props) {
             <h1 className="text-2xl font-black text-foreground tracking-wide">
               {mode === "choose" ? "BIENVENUE SUR KONGOSSA" : isLogin ? "SE CONNECTER" : "CRÉER UN COMPTE"}
             </h1>
-            <p className="text-xs font-bold text-primary mt-2">
-              🔒 Anonyme pour les autres. Vérifié pour la sécurité.
-            </p>
           </div>
 
           {/* ---------- CHOICE SCREEN ---------- */}
@@ -129,22 +125,20 @@ export default function IdentitySetup({ open, onSubmit }: Props) {
             </div>
           )}
 
-          {/* ---------- INFO STEP (signup + login) ---------- */}
-          {mode !== "choose" && step === "info" && (
+          {/* ---------- SIGNUP ---------- */}
+          {mode === "signup" && (
             <div className="space-y-4">
-              {!isLogin && (
-                <div>
-                  <label className="text-xs font-bold text-foreground mb-1.5 flex items-center gap-1.5">
-                    <User className="w-3.5 h-3.5" /> Nom
-                  </label>
-                  <input
-                    value={fullName}
-                    onChange={(e) => { setFullName(e.target.value); setError(""); }}
-                    placeholder="Ex: Jean Mbarga"
-                    className="w-full bg-card border border-border rounded-xl px-4 py-3 text-foreground outline-none focus:ring-2 focus:ring-primary"
-                  />
-                </div>
-              )}
+              <div>
+                <label className="text-xs font-bold text-foreground mb-1.5 flex items-center gap-1.5">
+                  <User className="w-3.5 h-3.5" /> Nom d'utilisateur
+                </label>
+                <input
+                  value={username}
+                  onChange={(e) => { setUsername(e.target.value); setError(""); }}
+                  placeholder="Ex: Jean237"
+                  className="w-full bg-card border border-border rounded-xl px-4 py-3 text-foreground outline-none focus:ring-2 focus:ring-primary"
+                />
+              </div>
               <div>
                 <label className="text-xs font-bold text-foreground mb-1.5 flex items-center gap-1.5">
                   <Phone className="w-3.5 h-3.5" /> Numéro de téléphone
@@ -157,35 +151,33 @@ export default function IdentitySetup({ open, onSubmit }: Props) {
                   className="w-full bg-card border border-border rounded-xl px-4 py-3 text-foreground outline-none focus:ring-2 focus:ring-primary"
                 />
               </div>
+              <div>
+                <label className="text-xs font-bold text-foreground mb-1.5 flex items-center gap-1.5">
+                  <KeyRound className="w-3.5 h-3.5" /> Mot de passe
+                </label>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => { setPassword(e.target.value); setError(""); }}
+                  placeholder="Au moins 6 caractères"
+                  className="w-full bg-card border border-border rounded-xl px-4 py-3 text-foreground outline-none focus:ring-2 focus:ring-primary"
+                />
+              </div>
 
               {error && <p className="text-xs font-semibold text-destructive">{error}</p>}
 
-              {!isLogin && (
-                <>
-                  <div className="flex items-start gap-2 bg-primary/10 rounded-xl p-3">
-                    <ShieldCheck className="w-4 h-4 text-primary mt-0.5 shrink-0" />
-                    <p className="text-[11px] text-foreground/80 leading-relaxed">
-                      🔒 Ton nom et ton numéro ne sont jamais visibles par les autres utilisateurs.
-                      Ils servent uniquement à sécuriser la communauté.
-                    </p>
-                  </div>
-                  <div className="flex items-start gap-2 bg-secondary/10 rounded-xl p-3">
-                    <Fingerprint className="w-4 h-4 text-secondary mt-0.5 shrink-0" />
-                    <p className="text-[11px] text-foreground/80 leading-relaxed">
-                      🛡️ Une empreinte matérielle sécurisée de ton appareil est enregistrée
-                      (technologie open-source). Elle empêche les comptes en double et permet aux
-                      autorités de tracer tout usage frauduleux.
-                    </p>
-                  </div>
-                </>
+              {scanning && (
+                <div className="flex items-center justify-center gap-2 text-primary text-sm font-bold py-1">
+                  <Fingerprint className="w-5 h-5 animate-pulse" /> Vérification par empreinte…
+                </div>
               )}
 
               <button
-                onClick={sendCode}
-                disabled={loading}
+                onClick={handleSignup}
+                disabled={loading || scanning}
                 className={`w-full ${accentBtn} font-extrabold py-3.5 rounded-xl active:scale-95 transition-transform disabled:opacity-60`}
               >
-                {loading ? "Envoi du code…" : "Recevoir le code de vérification"}
+                {loading ? "Création…" : "Créer mon compte"}
               </button>
               <button
                 onClick={() => resetFlow("choose")}
@@ -196,50 +188,53 @@ export default function IdentitySetup({ open, onSubmit }: Props) {
             </div>
           )}
 
-          {/* ---------- VERIFY STEP ---------- */}
-          {mode !== "choose" && step === "verify" && (
+          {/* ---------- LOGIN ---------- */}
+          {mode === "login" && (
             <div className="space-y-4">
-              <div className="flex items-start gap-2 bg-muted rounded-xl p-3">
-                <KeyRound className="w-4 h-4 text-primary mt-0.5 shrink-0" />
-                <p className="text-[11px] text-muted-foreground leading-relaxed">
-                  Un code à 6 chiffres a été envoyé au <span className="font-bold">{phone}</span>{" "}
-                  (par WhatsApp). Entre-le ci-dessous pour {isLogin ? "te connecter" : "vérifier ton numéro"}.
-                </p>
-              </div>
-
-              {devCode && (
-                <div className="bg-secondary/15 text-secondary rounded-xl p-3 text-xs font-bold text-center">
-                  Mode test — votre code : <span className="text-base tracking-widest">{devCode}</span>
-                </div>
-              )}
-
               <div>
                 <label className="text-xs font-bold text-foreground mb-1.5 flex items-center gap-1.5">
-                  <KeyRound className="w-3.5 h-3.5" /> Code de vérification
+                  <User className="w-3.5 h-3.5" /> Nom d'utilisateur ou numéro
                 </label>
                 <input
-                  value={code}
-                  onChange={(e) => { setCode(e.target.value.replace(/\D/g, "").slice(0, 6)); setError(""); }}
-                  placeholder="123456"
-                  inputMode="numeric"
-                  className="w-full bg-card border border-border rounded-xl px-4 py-3 text-foreground text-center text-2xl tracking-[0.5em] outline-none focus:ring-2 focus:ring-primary"
+                  value={identifier}
+                  onChange={(e) => { setIdentifier(e.target.value); setError(""); }}
+                  placeholder="Ex: Jean237 ou +237699999999"
+                  className="w-full bg-card border border-border rounded-xl px-4 py-3 text-foreground outline-none focus:ring-2 focus:ring-primary"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-bold text-foreground mb-1.5 flex items-center gap-1.5">
+                  <KeyRound className="w-3.5 h-3.5" /> Mot de passe
+                </label>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => { setPassword(e.target.value); setError(""); }}
+                  placeholder="Ton mot de passe"
+                  className="w-full bg-card border border-border rounded-xl px-4 py-3 text-foreground outline-none focus:ring-2 focus:ring-primary"
                 />
               </div>
 
               {error && <p className="text-xs font-semibold text-destructive">{error}</p>}
 
+              {scanning && (
+                <div className="flex items-center justify-center gap-2 text-secondary text-sm font-bold py-1">
+                  <Fingerprint className="w-5 h-5 animate-pulse" /> Vérification par empreinte…
+                </div>
+              )}
+
               <button
-                onClick={verifyCode}
-                disabled={loading}
+                onClick={handleLogin}
+                disabled={loading || scanning}
                 className={`w-full ${accentBtn} font-extrabold py-3.5 rounded-xl active:scale-95 transition-transform disabled:opacity-60`}
               >
-                {loading ? "Vérification…" : isLogin ? "Se connecter" : "Vérifier et continuer"}
+                {loading ? "Connexion…" : "Se connecter"}
               </button>
               <button
-                onClick={() => { setStep("info"); setCode(""); setError(""); }}
-                className="w-full text-muted-foreground font-semibold text-sm py-2"
+                onClick={() => resetFlow("choose")}
+                className="w-full text-muted-foreground font-semibold text-sm py-2 flex items-center justify-center gap-1.5"
               >
-                {isLogin ? "Modifier mon numéro" : "Modifier mes informations"}
+                <ArrowLeft className="w-4 h-4" /> Retour
               </button>
             </div>
           )}

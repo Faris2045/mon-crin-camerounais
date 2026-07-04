@@ -142,9 +142,12 @@ cd android && ./gradlew assembleDebug
 
 ## 7. Déjà intégré dans l'app
 
-- **Connexion / Inscription** : écran d'accueil avec « Créer un compte »
-  (nom + numéro + code) ou « J'ai déjà un compte » (numéro + code, nom récupéré auto).
-- **Empreinte matérielle** (FingerprintJS OSS) pour l'anti-fraude et le traçage autorités.
+- **Inscription** : nom d'utilisateur + numéro + mot de passe, puis
+  **vérification par empreinte** (capteur de l'appareil) avant l'accès.
+- **Connexion** : nom d'utilisateur (ou numéro) + mot de passe, puis empreinte.
+- **Empreinte biométrique native** via `@capgo/capacitor-native-biometric`.
+  Ajoute la permission `USE_BIOMETRIC` dans `android/app/src/main/AndroidManifest.xml`
+  si elle n'est pas déjà présente (le plugin la déclare généralement automatiquement).
 - **Notifications locales + vibration/son** (commentaires, réponses, SOS proches).
 - **Commentaires différenciés par couleur** + réponse à un commentaire précis.
 
