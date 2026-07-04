@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      accounts: {
+        Row: {
+          created_at: string
+          fingerprint: string | null
+          id: string
+          password_hash: string
+          phone: string
+          updated_at: string
+          username: string
+        }
+        Insert: {
+          created_at?: string
+          fingerprint?: string | null
+          id?: string
+          password_hash: string
+          phone: string
+          updated_at?: string
+          username: string
+        }
+        Update: {
+          created_at?: string
+          fingerprint?: string | null
+          id?: string
+          password_hash?: string
+          phone?: string
+          updated_at?: string
+          username?: string
+        }
+        Relationships: []
+      }
       alerts: {
         Row: {
           author_id: string
