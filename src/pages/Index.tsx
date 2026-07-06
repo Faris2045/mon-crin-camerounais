@@ -45,12 +45,12 @@ export default function Index() {
         {showSplash && <SplashScreen onFinish={() => setShowSplash(false)} />}
       </AnimatePresence>
 
-      {/* Identity creation (required, for police tracing) */}
+      {/* Identity creation (email + username + password) */}
       <IdentitySetup
         open={showIdentity}
-        onSubmit={(name, phone) => {
-          store.saveIdentity(name, phone);
-          toast({ title: "Identité enregistrée ✅", description: "Tu restes anonyme publiquement." });
+        onSubmit={(username, email) => {
+          store.saveIdentity(username, email);
+          toast({ title: "Bienvenue ✅", description: "Tu restes anonyme publiquement." });
         }}
       />
 
