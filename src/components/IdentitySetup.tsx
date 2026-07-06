@@ -96,7 +96,7 @@ export default function IdentitySetup({ open, onSubmit }: Props) {
     setLoading(true);
     const fingerprint = await getDeviceFingerprint().catch(() => undefined);
     const { data } = await supabase.functions.invoke("signup", {
-      body: { username: pendingName, email: pendingEmail, password: "__resend__", fingerprint },
+      body: { username: pendingName, email: pendingEmail, password: pendingPassword, fingerprint },
     });
     setLoading(false);
     if (data?.requiresCode) setInfo("Nouveau code envoyé.");
