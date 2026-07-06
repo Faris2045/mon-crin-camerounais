@@ -68,6 +68,7 @@ export default function IdentitySetup({ open, onSubmit }: Props) {
     if (data.requiresCode) {
       setPendingEmail(mail);
       setPendingName(name);
+      setPendingPassword(password);
       setCode("");
       setInfo(`Un code à 6 chiffres a été envoyé à ${mail}.`);
       setMode("verify");
