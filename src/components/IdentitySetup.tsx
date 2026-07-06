@@ -22,6 +22,7 @@ export default function IdentitySetup({ open, onSubmit }: Props) {
   const [code, setCode] = useState("");
   const [pendingEmail, setPendingEmail] = useState("");
   const [pendingName, setPendingName] = useState("");
+  const [pendingPassword, setPendingPassword] = useState("");
   const [error, setError] = useState("");
   const [info, setInfo] = useState("");
   const [loading, setLoading] = useState(false);
