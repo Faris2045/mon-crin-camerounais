@@ -129,7 +129,7 @@ export function useKongossaStore() {
     initNotifications();
   }, []);
 
-  const needsIdentity = !user.fullName || !user.phone;
+  const needsIdentity = !user.fullName || !user.email;
 
   // Check if user needs initial area selection (only after identity is set)
   useEffect(() => {
