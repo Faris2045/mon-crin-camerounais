@@ -69,7 +69,8 @@ function getUserData(): UserData {
       parsed.areaTimestamp = Date.now();
     }
     if (parsed.fullName === undefined) parsed.fullName = "";
-    if (parsed.phone === undefined) parsed.phone = "";
+    if (parsed.email === undefined) parsed.email = parsed.phone ?? "";
+    delete parsed.phone;
     localStorage.setItem("kongossa_user", JSON.stringify(parsed));
     return parsed;
   }
@@ -79,7 +80,7 @@ function getUserData(): UserData {
     areaId: "public",
     areaTimestamp: Date.now(),
     fullName: "",
-    phone: "",
+    email: "",
   };
   localStorage.setItem("kongossa_user", JSON.stringify(data));
   return data;
