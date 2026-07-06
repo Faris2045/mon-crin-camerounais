@@ -17,28 +17,34 @@ export type Database = {
       accounts: {
         Row: {
           created_at: string
+          email: string | null
+          email_verified: boolean
           fingerprint: string | null
           id: string
           password_hash: string
-          phone: string
+          phone: string | null
           updated_at: string
           username: string
         }
         Insert: {
           created_at?: string
+          email?: string | null
+          email_verified?: boolean
           fingerprint?: string | null
           id?: string
           password_hash: string
-          phone: string
+          phone?: string | null
           updated_at?: string
           username: string
         }
         Update: {
           created_at?: string
+          email?: string | null
+          email_verified?: boolean
           fingerprint?: string | null
           id?: string
           password_hash?: string
-          phone?: string
+          phone?: string | null
           updated_at?: string
           username?: string
         }
@@ -129,6 +135,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      email_verifications: {
+        Row: {
+          attempts: number
+          code: string
+          created_at: string
+          email: string
+          expires_at: string
+          id: string
+          purpose: string
+          verified: boolean
+        }
+        Insert: {
+          attempts?: number
+          code: string
+          created_at?: string
+          email: string
+          expires_at?: string
+          id?: string
+          purpose?: string
+          verified?: boolean
+        }
+        Update: {
+          attempts?: number
+          code?: string
+          created_at?: string
+          email?: string
+          expires_at?: string
+          id?: string
+          purpose?: string
+          verified?: boolean
+        }
+        Relationships: []
       }
       identity_traces: {
         Row: {
