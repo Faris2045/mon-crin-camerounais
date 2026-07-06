@@ -142,14 +142,35 @@ cd android && ./gradlew assembleDebug
 
 ## 7. Déjà intégré dans l'app
 
-- **Inscription** : nom d'utilisateur + numéro + mot de passe, puis
-  **vérification par empreinte** (capteur de l'appareil) avant l'accès.
-- **Connexion** : nom d'utilisateur (ou numéro) + mot de passe, puis empreinte.
-- **Empreinte biométrique native** via `@capgo/capacitor-native-biometric`.
-  Ajoute la permission `USE_BIOMETRIC` dans `android/app/src/main/AndroidManifest.xml`
-  si elle n'est pas déjà présente (le plugin la déclare généralement automatiquement).
+- **Inscription** : nom d'utilisateur + **adresse e-mail** + mot de passe
+  (min. 8 caractères). Un **code à 6 chiffres** est envoyé par e-mail et saisi
+  directement dans l'app (aucune redirection, aucune page externe).
+- **Connexion** : nom d'utilisateur **ou** e-mail + mot de passe.
+- **Empreinte digitale (optionnelle)** : après le mot de passe, l'app propose un
+  déverrouillage par empreinte si le capteur est disponible. Elle ne **bloque
+  jamais** l'accès et ne fait plus planter l'app si le capteur est absent.
 - **Notifications locales + vibration/son** (commentaires, réponses, SOS proches).
 - **Commentaires différenciés par couleur** + réponse à un commentaire précis.
 
+### 📧 Activer l'envoi des codes par e-mail (une seule action de ta part)
+
+Tant qu'un **domaine e-mail** n'est pas configuré, l'app crée le compte
+directement (sans demander le code) pour ne bloquer personne. Pour activer la
+vraie vérification par code :
+
+1. Dans Lovable : **Cloud → Emails → configurer le domaine d'envoi** (une étape
+   DNS unique chez ton hébergeur de domaine).
+2. Une fois le domaine vérifié, les codes à 6 chiffres partent automatiquement.
+
+### 🔒 Permission empreinte (Android)
+
+Si tu utilises l'empreinte, ajoute dans
+`android/app/src/main/AndroidManifest.xml` (dans `<manifest>`) :
+
+```xml
+<uses-permission android:name="android.permission.USE_BIOMETRIC"/>
+```
+
 > Notifications quand l'app est **fermée** : nécessitent Firebase Cloud Messaging
 > (`google-services.json` dans `android/app/`). Le plugin est déjà installé.
+

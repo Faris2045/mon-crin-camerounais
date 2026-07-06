@@ -53,7 +53,7 @@ export interface UserData {
   areaId: string;
   areaTimestamp: number;
   fullName: string;
-  phone: string;
+  email: string;
 }
 
 function generateUserId(): string {
@@ -69,7 +69,8 @@ function getUserData(): UserData {
       parsed.areaTimestamp = Date.now();
     }
     if (parsed.fullName === undefined) parsed.fullName = "";
-    if (parsed.phone === undefined) parsed.phone = "";
+    if (parsed.email === undefined) parsed.email = parsed.phone ?? "";
+    delete parsed.phone;
     localStorage.setItem("kongossa_user", JSON.stringify(parsed));
     return parsed;
   }
@@ -79,7 +80,7 @@ function getUserData(): UserData {
     areaId: "public",
     areaTimestamp: Date.now(),
     fullName: "",
-    phone: "",
+    email: "",
   };
   localStorage.setItem("kongossa_user", JSON.stringify(data));
   return data;
@@ -128,7 +129,7 @@ export function useKongossaStore() {
     initNotifications();
   }, []);
 
-  const needsIdentity = !user.fullName || !user.phone;
+  const needsIdentity = !user.fullName || !user.email;
 
   // Check if user needs initial area selection (only after identity is set)
   useEffect(() => {
@@ -154,12 +155,10 @@ export function useKongossaStore() {
     return () => clearInterval(interval);
   }, [user.areaTimestamp]);
 
-  // Save the user's real identity. The private trace (name/phone/fingerprint)
-  // is registered server-side by the verify-otp function (anti-duplicate check),
-  // so here we only persist it locally on the device.
-  const saveIdentity = useCallback(async (fullName: string, phone: string) => {
+  // Save the user's account identity locally on the device.
+  const saveIdentity = useCallback(async (fullName: string, email: string) => {
     const fingerprint = await getDeviceFingerprint().catch(() => undefined);
-    const updated = { ...user, fullName, phone };
+    const updated = { ...user, fullName, email };
     setUser(updated);
     localStorage.setItem("kongossa_user", JSON.stringify(updated));
     if (fingerprint) localStorage.setItem("kongossa_fp", fingerprint);
