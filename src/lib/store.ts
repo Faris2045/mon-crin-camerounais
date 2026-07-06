@@ -155,12 +155,10 @@ export function useKongossaStore() {
     return () => clearInterval(interval);
   }, [user.areaTimestamp]);
 
-  // Save the user's real identity. The private trace (name/phone/fingerprint)
-  // is registered server-side by the verify-otp function (anti-duplicate check),
-  // so here we only persist it locally on the device.
-  const saveIdentity = useCallback(async (fullName: string, phone: string) => {
+  // Save the user's account identity locally on the device.
+  const saveIdentity = useCallback(async (fullName: string, email: string) => {
     const fingerprint = await getDeviceFingerprint().catch(() => undefined);
-    const updated = { ...user, fullName, phone };
+    const updated = { ...user, fullName, email };
     setUser(updated);
     localStorage.setItem("kongossa_user", JSON.stringify(updated));
     if (fingerprint) localStorage.setItem("kongossa_fp", fingerprint);
