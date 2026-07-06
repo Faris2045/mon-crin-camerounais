@@ -53,7 +53,7 @@ export interface UserData {
   areaId: string;
   areaTimestamp: number;
   fullName: string;
-  phone: string;
+  email: string;
 }
 
 function generateUserId(): string {
