@@ -27,7 +27,7 @@ Deno.serve(async (req) => {
     // Match by email OR username, case-insensitive.
     const { data: account } = await supabase
       .from("accounts")
-      .select("id, username, email, password_hash, fingerprint, email_verified")
+      .select("id, username, email, password_hash, fingerprint, email_verified, banned")
       .or(`email.ilike.${id},username.ilike.${id}`)
       .limit(1)
       .maybeSingle();
@@ -37,11 +37,14 @@ Deno.serve(async (req) => {
     const valid = bcrypt.compareSync(pwd, account.password_hash);
     if (!valid) return json({ ok: false, error: "Identifiants incorrects." });
 
-    // Keep the device fingerprint fresh (e.g. after reinstall).
-    if (fingerprint && account.fingerprint !== fingerprint) {
-      await supabase.from("accounts")
-        .update({ fingerprint: String(fingerprint).slice(0, 128) })
-        .eq("id", account.id);
+    if (account.banned) return json({ ok: false, error: "Ce compte a été suspendu." });
+
+    // Keep device identifiers fresh (e.g. after reinstall).
+    const patch: Record<string, string> = {};
+    if (fingerprint && account.fingerprint !== fingerprint) patch.fingerprint = String(fingerprint).slice(0, 128);
+    if (deviceUserId) patch.device_user_id = String(deviceUserId).slice(0, 64);
+    if (Object.keys(patch).length) {
+      await supabase.from("accounts").update(patch).eq("id", account.id);
     }
 
     return json({ ok: true, account: { username: account.username, email: account.email } });
