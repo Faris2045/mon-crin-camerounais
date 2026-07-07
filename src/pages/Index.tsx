@@ -197,6 +197,10 @@ export default function Index() {
             onDislike={store.toggleDislike}
             onComment={store.addComment}
             onReport={handleReport}
+            onReportUser={(authorId, authorName) => {
+              store.reportUser(authorId, authorName, selectedMessage.id);
+              toast({ title: "Compte signalé", description: "Merci, notre équipe va vérifier ce compte." });
+            }}
           />
         )}
       </AnimatePresence>
