@@ -7,12 +7,13 @@ import logo from "@/assets/kongossa-logo.png";
 
 interface Props {
   open: boolean;
+  deviceUserId: string;
   onSubmit: (username: string, email: string) => void;
 }
 
 type Mode = "choose" | "signup" | "verify" | "login";
 
-export default function IdentitySetup({ open, onSubmit }: Props) {
+export default function IdentitySetup({ open, deviceUserId, onSubmit }: Props) {
   const [mode, setMode] = useState<Mode>("choose");
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
@@ -49,7 +50,7 @@ export default function IdentitySetup({ open, onSubmit }: Props) {
     setLoading(true);
     const fingerprint = await getDeviceFingerprint().catch(() => undefined);
     const { data, error: fnError } = await supabase.functions.invoke("signup", {
-      body: { username: name, email: mail, password, fingerprint },
+      body: { username: name, email: mail, password, fingerprint, deviceUserId },
     });
     setLoading(false);
     if (fnError || !data?.ok) return setError(data?.error || "Impossible de créer le compte. Réessaie.");
@@ -85,7 +86,7 @@ export default function IdentitySetup({ open, onSubmit }: Props) {
     setLoading(true);
     const fingerprint = await getDeviceFingerprint().catch(() => undefined);
     const { data } = await supabase.functions.invoke("signup", {
-      body: { username: pendingName, email: pendingEmail, password: pendingPassword, fingerprint },
+      body: { username: pendingName, email: pendingEmail, password: pendingPassword, fingerprint, deviceUserId },
     });
     setLoading(false);
     if (data?.requiresCode) setInfo("Nouveau code envoyé.");
@@ -100,7 +101,7 @@ export default function IdentitySetup({ open, onSubmit }: Props) {
     setLoading(true);
     const fingerprint = await getDeviceFingerprint().catch(() => undefined);
     const { data, error: fnError } = await supabase.functions.invoke("login", {
-      body: { identifier: id, password, fingerprint },
+      body: { identifier: id, password, fingerprint, deviceUserId },
     });
     setLoading(false);
     if (fnError || !data?.ok) return setError(data?.error || "Connexion impossible.");
