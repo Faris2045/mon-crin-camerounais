@@ -48,6 +48,7 @@ export default function Index() {
       {/* Identity creation (email + username + password) */}
       <IdentitySetup
         open={showIdentity}
+        deviceUserId={store.user.id}
         onSubmit={(username, email) => {
           store.saveIdentity(username, email);
           toast({ title: "Bienvenue ✅", description: "Tu restes anonyme publiquement." });
@@ -196,6 +197,10 @@ export default function Index() {
             onDislike={store.toggleDislike}
             onComment={store.addComment}
             onReport={handleReport}
+            onReportUser={(authorId, authorName) => {
+              store.reportUser(authorId, authorName, selectedMessage.id);
+              toast({ title: "Compte signalé", description: "Merci, notre équipe va vérifier ce compte." });
+            }}
           />
         )}
       </AnimatePresence>

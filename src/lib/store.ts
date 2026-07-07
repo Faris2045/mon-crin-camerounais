@@ -538,6 +538,18 @@ export function useKongossaStore() {
     if (error) console.error("Error reporting:", error);
   }, []);
 
+  // Report a suspicious / fake account to the moderation team
+  const reportUser = useCallback(async (authorId: string, authorName: string, messageId?: string) => {
+    const { error } = await supabase.from("account_reports").insert({
+      reported_author_id: authorId,
+      reported_author_name: authorName,
+      reason: "Signalé depuis un kongossa",
+      reporter_id: user.id,
+      message_id: messageId ?? null,
+    });
+    if (error) console.error("Error reporting user:", error);
+  }, [user.id]);
+
   // A post becomes a trend once it reaches 50 likes OR 50 comments
   const TREND_THRESHOLD = 50;
   const engagement = (m: KongossaMessage) => m.likes + m.comments.length * 2;
@@ -613,6 +625,7 @@ export function useKongossaStore() {
     toggleDislike,
     addComment,
     reportMessage,
+    reportUser,
     loading,
     showAreaPrompt,
     needsInitialArea,

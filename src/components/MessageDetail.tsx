@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, ThumbsUp, ThumbsDown, MapPin, Clock, Send, Flag, Flame, Reply, X, CornerDownRight } from "lucide-react";
+import { ArrowLeft, ThumbsUp, ThumbsDown, MapPin, Clock, Send, Flag, Flame, Reply, X, CornerDownRight, ShieldAlert } from "lucide-react";
 import { KongossaMessage, KongossaComment } from "@/lib/store";
 
 interface Props {
@@ -11,6 +11,7 @@ interface Props {
   onDislike: (id: string) => void;
   onComment: (id: string, text: string, replyTo?: { id: string; author: string; text: string } | null) => void;
   onReport: (id: string) => void;
+  onReportUser: (authorId: string, authorName: string) => void;
 }
 
 function timeAgo(timestamp: number): string {
@@ -22,12 +23,14 @@ function timeAgo(timestamp: number): string {
   return `Il y a ${hours}h`;
 }
 
-export default function MessageDetail({ message, userId, onBack, onLike, onDislike, onComment, onReport }: Props) {
+export default function MessageDetail({ message, userId, onBack, onLike, onDislike, onComment, onReport, onReportUser }: Props) {
   const [comment, setComment] = useState("");
   const [replyTo, setReplyTo] = useState<{ id: string; author: string; text: string } | null>(null);
+  const [reported, setReported] = useState(false);
   const liked = message.likedBy.includes(userId);
   const disliked = message.dislikedBy.includes(userId);
   const isHot = message.likes >= 50;
+  const isMine = message.authorId === userId;
 
   const handleComment = () => {
     if (!comment.trim()) return;
@@ -73,9 +76,20 @@ export default function MessageDetail({ message, userId, onBack, onLike, onDisli
             <button onClick={() => onDislike(message.id)} className={`flex items-center gap-1 font-semibold ${disliked ? "text-destructive" : "text-muted-foreground"}`}>
               <ThumbsDown className={`w-4 h-4 ${disliked ? "fill-current" : ""}`} /> {message.dislikes}
             </button>
-            <button onClick={() => onReport(message.id)} className="text-muted-foreground/50 hover:text-destructive ml-auto">
-              <Flag className="w-3.5 h-3.5" />
-            </button>
+            <div className="ml-auto flex items-center gap-3">
+              {!isMine && (
+                <button
+                  onClick={() => { if (!reported) { onReportUser(message.authorId, message.author); setReported(true); } }}
+                  disabled={reported}
+                  className={`flex items-center gap-1 text-xs font-semibold ${reported ? "text-muted-foreground/40" : "text-muted-foreground/60 hover:text-destructive"}`}
+                >
+                  <ShieldAlert className="w-3.5 h-3.5" /> {reported ? "Signalé" : "Signaler le compte"}
+                </button>
+              )}
+              <button onClick={() => onReport(message.id)} className="text-muted-foreground/50 hover:text-destructive">
+                <Flag className="w-3.5 h-3.5" />
+              </button>
+            </div>
           </div>
         </div>
 

@@ -39,7 +39,7 @@ Deno.serve(async (req) => {
     });
 
   try {
-    const { username, email, password, fingerprint } = await req.json();
+    const { username, email, password, fingerprint, deviceUserId } = await req.json();
 
     const name = String(username ?? "").trim();
     const mail = String(email ?? "").trim().toLowerCase();
@@ -72,15 +72,17 @@ Deno.serve(async (req) => {
     const password_hash = bcrypt.hashSync(pwd, 10);
     const fp = fingerprint ? String(fingerprint).slice(0, 128) : null;
 
+    const dev = deviceUserId ? String(deviceUserId).slice(0, 64) : null;
+
     // Create or refresh an unverified account for this email.
     let accountId = emailTaken?.id as string | undefined;
     if (accountId) {
       await supabase.from("accounts").update({
-        username: name, password_hash, fingerprint: fp, email_verified: false,
+        username: name, password_hash, fingerprint: fp, device_user_id: dev, email_verified: false,
       }).eq("id", accountId);
     } else {
       const { data: created, error } = await supabase.from("accounts").insert({
-        username: name, email: mail, password_hash, fingerprint: fp, email_verified: false,
+        username: name, email: mail, password_hash, fingerprint: fp, device_user_id: dev, email_verified: false,
       }).select("id").single();
       if (error || !created) return json({ ok: false, error: "Impossible de créer le compte. Réessaie." });
       accountId = created.id;

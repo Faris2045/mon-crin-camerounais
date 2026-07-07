@@ -14,9 +14,44 @@ export type Database = {
   }
   public: {
     Tables: {
-      accounts: {
+      account_reports: {
         Row: {
           created_at: string
+          id: string
+          message_id: string | null
+          reason: string
+          reported_author_id: string
+          reported_author_name: string
+          reporter_id: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message_id?: string | null
+          reason: string
+          reported_author_id: string
+          reported_author_name: string
+          reporter_id?: string | null
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message_id?: string | null
+          reason?: string
+          reported_author_id?: string
+          reported_author_name?: string
+          reporter_id?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
+      accounts: {
+        Row: {
+          banned: boolean
+          created_at: string
+          device_user_id: string | null
           email: string | null
           email_verified: boolean
           fingerprint: string | null
@@ -27,7 +62,9 @@ export type Database = {
           username: string
         }
         Insert: {
+          banned?: boolean
           created_at?: string
+          device_user_id?: string | null
           email?: string | null
           email_verified?: boolean
           fingerprint?: string | null
@@ -38,7 +75,9 @@ export type Database = {
           username: string
         }
         Update: {
+          banned?: boolean
           created_at?: string
+          device_user_id?: string | null
           email?: string | null
           email_verified?: boolean
           fingerprint?: string | null
