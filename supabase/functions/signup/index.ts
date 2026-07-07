@@ -39,7 +39,7 @@ Deno.serve(async (req) => {
     });
 
   try {
-    const { username, email, password, fingerprint } = await req.json();
+    const { username, email, password, fingerprint, deviceUserId } = await req.json();
 
     const name = String(username ?? "").trim();
     const mail = String(email ?? "").trim().toLowerCase();
