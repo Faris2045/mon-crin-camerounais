@@ -1,176 +1,125 @@
-# 📱 KONGOSSA — Build Android (APK) de A à Z
+# KONGOSSA — Build Guide (Android APK & AAB)
 
-Ce guide part de **zéro** : cloner ton dépôt GitHub → générer l'APK installable.
-(On se concentre uniquement sur **Android**. iOS = plus tard.)
+This guide takes you from cloning your GitHub repo to a working **APK** (for direct install / testing) and **AAB** (for the Play Store).
 
----
+## Authentication (current behaviour)
+- **Sign up:** username + **email** (required) + password (min. 8 chars). A 6-digit code is used to verify the email in-app (no links, no redirection).
+- **Log in:** username **or** email + password.
+- **No fingerprint / biometric** anymore — it was removed to avoid the crash on some devices. Security relies on password hashing (bcrypt), email verification, and a silent device identifier used only for admin fraud tracing.
+- **Admin panel** (`/admin`, default `admin` / `kongossa2024`): manage accounts (full identity: username, email, phone, device id, device fingerprint, verified/suspended state), review fraud/fake-account reports, suspend or delete accounts, and moderate kongossas and alerts.
 
-## ⚠️ Pourquoi tes modifications n'apparaissaient pas dans l'APK
-
-L'APK n'embarque **PAS** automatiquement ton dernier code. Deux règles :
-
-1. Le dossier `android/` contient une **copie figée** de l'app web. Tant que tu
-   ne fais pas `bun run build && npx cap sync android`, l'APK réutilise
-   l'ancienne version → tes nouveautés (login/signup, empreinte…) sont invisibles.
-2. Il ne doit **PAS** y avoir de `server.url` dans `capacitor.config.ts` pour une
-   vraie release. Si `server.url` pointe vers l'aperçu Lovable, l'app installée
-   charge le site en ligne au lieu de ton build local. ✅ Notre `capacitor.config.ts`
-   n'a **aucun** `server.url` — c'est correct pour produire un vrai APK.
-
-👉 **La bonne séquence est toujours : `git pull` → `build` → `cap sync` → `gradlew`.**
+> ⚠️ **Email delivery:** real 6-digit codes are only sent once an email sending domain is configured for the project. Until then, accounts are auto-verified on signup so no one gets locked out. Configure the domain in **Cloud → Emails** to enable real code delivery.
 
 ---
 
-## 0. Prérequis (une seule fois)
-
-- **Node 18+** et **bun** (ou npm)
+## 0. Prerequisites (install once)
+- **Node.js 18+** and **npm** (or **bun**)
 - **Java JDK 17**
-- **Android Studio** (fournit le SDK Android + `gradle`) — ouvre-le au moins une fois.
+- **Android Studio** (includes the Android SDK + `sdkmanager`)
+- Set `ANDROID_HOME` / `JAVA_HOME` environment variables
 
----
-
-## 1. Cloner ton projet depuis GitHub
-
+## 1. Clone your repo
 ```bash
-git clone https://github.com/TON_UTILISATEUR/TON_REPO.git kongossa
+git clone <YOUR_GITHUB_REPO_URL> kongossa
 cd kongossa
-bun install          # ou: npm install
 ```
 
-> Plus tard, quand tu reviens : `git pull` puis `bun install`.
+## 2. Install dependencies
+```bash
+npm install
+```
 
----
+## 3. Build the web app
+```bash
+npm run build
+```
 
-## 2. Ajouter la plateforme Android (une seule fois)
-
-Si le dossier `android/` n'existe pas encore :
-
+## 4. Add the Android platform (first time only)
 ```bash
 npx cap add android
 ```
 
-S'il existe déjà, saute cette étape.
-
----
-
-## 3. 🔁 Construire le web + synchroniser (À CHAQUE MODIF)
-
+## 5. Sync the web build into Android (run after every `npm run build`)
 ```bash
-bun run build            # génère /dist avec ton dernier code
-npx cap sync android     # copie /dist + plugins dans android/
+npx cap sync android
 ```
 
-Plugins natifs déjà inclus : `@capacitor/local-notifications`,
-`@capacitor/haptics`, `@capacitor/push-notifications`, `@fingerprintjs/fingerprintjs`.
-
----
-
-## 4. 🤖 APK de test (debug)
-
+## 6a. Build a debug APK (quick install / testing)
 ```bash
 cd android
 ./gradlew assembleDebug
 ```
-
-APK généré :
-```
-android/app/build/outputs/apk/debug/app-debug.apk
-```
-
-Transfère-le sur ton téléphone et installe-le (active « sources inconnues »).
-
-> Alternative : `npx cap open android` puis **Run ▶** dans Android Studio.
-
----
-
-## 5. 🔐 APK / AAB de RELEASE signé
-
-### a) Créer une clé (une seule fois)
+Output: `android/app/build/outputs/apk/debug/app-debug.apk`
+Install on a connected phone:
 ```bash
-keytool -genkey -v -keystore kongossa.keystore \
-  -alias kongossa -keyalg RSA -keysize 2048 -validity 10000
+adb install -r app/build/outputs/apk/debug/app-debug.apk
 ```
 
-### b) `android/key.properties`
-```properties
-storePassword=TON_MDP
-keyPassword=TON_MDP
-keyAlias=kongossa
+## 6b. Build a release APK + AAB (for distribution / Play Store)
+
+### Create a signing key (once)
+```bash
+keytool -genkey -v -keystore kongossa.keystore -alias kongossa \
+  -keyalg RSA -keysize 2048 -validity 10000
+```
+
+### Register the key — `android/keystore.properties`
+```
 storeFile=../../kongossa.keystore
+storePassword=YOUR_STORE_PASSWORD
+keyAlias=kongossa
+keyPassword=YOUR_KEY_PASSWORD
 ```
 
-### c) `android/app/build.gradle`, avant `buildTypes` :
+### Reference it in `android/app/build.gradle`
+Inside `android { ... }`:
 ```gradle
 def keystoreProperties = new Properties()
-def keystorePropertiesFile = rootProject.file("key.properties")
+def keystorePropertiesFile = rootProject.file("keystore.properties")
 if (keystorePropertiesFile.exists()) {
     keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
 }
+
 signingConfigs {
     release {
-        keyAlias keystoreProperties['keyAlias']
-        keyPassword keystoreProperties['keyPassword']
         storeFile file(keystoreProperties['storeFile'])
         storePassword keystoreProperties['storePassword']
+        keyAlias keystoreProperties['keyAlias']
+        keyPassword keystoreProperties['keyPassword']
+    }
+}
+buildTypes {
+    release {
+        signingConfig signingConfigs.release
+        minifyEnabled false
     }
 }
 ```
-Puis dans `buildTypes { release { ... } }` : `signingConfig signingConfigs.release`
 
-### d) Générer
+### Build the signed **APK**
 ```bash
-bun run build && npx cap sync android
 cd android
-./gradlew assembleRelease   # app/build/outputs/apk/release/app-release.apk
-./gradlew bundleRelease     # app/build/outputs/bundle/release/app-release.aab
+./gradlew assembleRelease
 ```
+Output: `android/app/build/outputs/apk/release/app-release.apk`
+
+### Build the signed **AAB** (Play Store)
+```bash
+./gradlew bundleRelease
+```
+Output: `android/app/build/outputs/bundle/release/app-release.aab`
 
 ---
 
-## 6. ⚡ Aide-mémoire (copie-colle)
-
+## Updating the app later
+Whenever you pull new code:
 ```bash
 git pull
-bun install
-bun run build
+npm install
+npm run build
 npx cap sync android
-cd android && ./gradlew assembleDebug
-# APK : android/app/build/outputs/apk/debug/app-debug.apk
+cd android && ./gradlew assembleRelease   # or bundleRelease
 ```
 
----
-
-## 7. Déjà intégré dans l'app
-
-- **Inscription** : nom d'utilisateur + **adresse e-mail** + mot de passe
-  (min. 8 caractères). Un **code à 6 chiffres** est envoyé par e-mail et saisi
-  directement dans l'app (aucune redirection, aucune page externe).
-- **Connexion** : nom d'utilisateur **ou** e-mail + mot de passe.
-- **Empreinte digitale (optionnelle)** : après le mot de passe, l'app propose un
-  déverrouillage par empreinte si le capteur est disponible. Elle ne **bloque
-  jamais** l'accès et ne fait plus planter l'app si le capteur est absent.
-- **Notifications locales + vibration/son** (commentaires, réponses, SOS proches).
-- **Commentaires différenciés par couleur** + réponse à un commentaire précis.
-
-### 📧 Activer l'envoi des codes par e-mail (une seule action de ta part)
-
-Tant qu'un **domaine e-mail** n'est pas configuré, l'app crée le compte
-directement (sans demander le code) pour ne bloquer personne. Pour activer la
-vraie vérification par code :
-
-1. Dans Lovable : **Cloud → Emails → configurer le domaine d'envoi** (une étape
-   DNS unique chez ton hébergeur de domaine).
-2. Une fois le domaine vérifié, les codes à 6 chiffres partent automatiquement.
-
-### 🔒 Permission empreinte (Android)
-
-Si tu utilises l'empreinte, ajoute dans
-`android/app/src/main/AndroidManifest.xml` (dans `<manifest>`) :
-
-```xml
-<uses-permission android:name="android.permission.USE_BIOMETRIC"/>
-```
-
-> Notifications quand l'app est **fermée** : nécessitent Firebase Cloud Messaging
-> (`google-services.json` dans `android/app/`). Le plugin est déjà installé.
-
+## Notifications
+Local notifications (new comments, SOS alerts) work out of the box. For push notifications while the app is closed, connect Firebase Cloud Messaging in Android Studio and add `google-services.json` to `android/app/`.
