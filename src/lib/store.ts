@@ -625,6 +625,7 @@ export function useKongossaStore() {
     toggleDislike,
     addComment,
     reportMessage,
+    reportUser,
     loading,
     showAreaPrompt,
     needsInitialArea,
