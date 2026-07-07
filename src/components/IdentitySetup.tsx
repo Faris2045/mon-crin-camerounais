@@ -1,9 +1,8 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { User, Mail, KeyRound, Fingerprint, LogIn, UserPlus, ArrowLeft, ShieldCheck } from "lucide-react";
+import { User, Mail, KeyRound, LogIn, UserPlus, ArrowLeft, ShieldCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getDeviceFingerprint } from "@/lib/fingerprint";
-import { optionalFingerprint } from "@/lib/biometric";
 import logo from "@/assets/kongossa-logo.png";
 
 interface Props {
@@ -26,7 +25,6 @@ export default function IdentitySetup({ open, onSubmit }: Props) {
   const [error, setError] = useState("");
   const [info, setInfo] = useState("");
   const [loading, setLoading] = useState(false);
-  const [scanning, setScanning] = useState(false);
 
   if (!open) return null;
 
@@ -38,15 +36,6 @@ export default function IdentitySetup({ open, onSubmit }: Props) {
     setInfo("");
     setPassword("");
     setCode("");
-    setScanning(false);
-  };
-
-  // Optional fingerprint unlock, then finish — never blocks the user.
-  const finish = async (name: string, mail: string) => {
-    setScanning(true);
-    await optionalFingerprint(); // "ok" | "skipped" | "failed" — all continue
-    setScanning(false);
-    onSubmit(name, mail);
   };
 
   const handleSignup = async () => {
@@ -75,7 +64,7 @@ export default function IdentitySetup({ open, onSubmit }: Props) {
       return;
     }
     // Delivery not active yet: account created directly.
-    await finish(name, mail);
+    onSubmit(name, mail);
   };
 
   const handleVerify = async () => {
@@ -88,7 +77,7 @@ export default function IdentitySetup({ open, onSubmit }: Props) {
     });
     setLoading(false);
     if (fnError || !data?.ok) return setError(data?.error || "Code incorrect.");
-    await finish(pendingName, pendingEmail);
+    onSubmit(pendingName, pendingEmail);
   };
 
   const handleResend = async () => {
@@ -115,7 +104,7 @@ export default function IdentitySetup({ open, onSubmit }: Props) {
     });
     setLoading(false);
     if (fnError || !data?.ok) return setError(data?.error || "Connexion impossible.");
-    await finish(data.account.username, data.account.email);
+    onSubmit(data.account.username, data.account.email);
   };
 
   const accentBtn = isLogin ? "bg-secondary text-secondary-foreground" : "bg-primary text-primary-foreground";
@@ -168,8 +157,7 @@ export default function IdentitySetup({ open, onSubmit }: Props) {
                 <input type="password" value={password} onChange={(e) => { setPassword(e.target.value); setError(""); }} placeholder="Au moins 8 caractères" className={inputCls} />
               </div>
               {error && <p className="text-xs font-semibold text-destructive">{error}</p>}
-              {scanning && <div className="flex items-center justify-center gap-2 text-primary text-sm font-bold py-1"><Fingerprint className="w-5 h-5 animate-pulse" /> Déverrouillage…</div>}
-              <button onClick={handleSignup} disabled={loading || scanning} className={`w-full ${accentBtn} font-extrabold py-3.5 rounded-xl active:scale-95 transition-transform disabled:opacity-60`}>
+              <button onClick={handleSignup} disabled={loading} className={`w-full ${accentBtn} font-extrabold py-3.5 rounded-xl active:scale-95 transition-transform disabled:opacity-60`}>
                 {loading ? "Création…" : "Créer mon compte"}
               </button>
               <button onClick={() => reset("choose")} className="w-full text-muted-foreground font-semibold text-sm py-2 flex items-center justify-center gap-1.5"><ArrowLeft className="w-4 h-4" /> Retour</button>
@@ -185,8 +173,7 @@ export default function IdentitySetup({ open, onSubmit }: Props) {
                 <input value={code} onChange={(e) => { setCode(e.target.value.replace(/\D/g, "").slice(0, 6)); setError(""); }} placeholder="______" inputMode="numeric" className={`${inputCls} text-center text-2xl tracking-[0.5em] font-black`} />
               </div>
               {error && <p className="text-xs font-semibold text-destructive">{error}</p>}
-              {scanning && <div className="flex items-center justify-center gap-2 text-primary text-sm font-bold py-1"><Fingerprint className="w-5 h-5 animate-pulse" /> Déverrouillage…</div>}
-              <button onClick={handleVerify} disabled={loading || scanning} className="w-full bg-primary text-primary-foreground font-extrabold py-3.5 rounded-xl active:scale-95 transition-transform disabled:opacity-60">
+              <button onClick={handleVerify} disabled={loading} className="w-full bg-primary text-primary-foreground font-extrabold py-3.5 rounded-xl active:scale-95 transition-transform disabled:opacity-60">
                 {loading ? "Vérification…" : "Vérifier"}
               </button>
               <button onClick={handleResend} disabled={loading} className="w-full text-primary font-semibold text-sm py-2">Renvoyer le code</button>
@@ -206,8 +193,7 @@ export default function IdentitySetup({ open, onSubmit }: Props) {
                 <input type="password" value={password} onChange={(e) => { setPassword(e.target.value); setError(""); }} placeholder="Ton mot de passe" className={inputCls} />
               </div>
               {error && <p className="text-xs font-semibold text-destructive">{error}</p>}
-              {scanning && <div className="flex items-center justify-center gap-2 text-secondary text-sm font-bold py-1"><Fingerprint className="w-5 h-5 animate-pulse" /> Déverrouillage…</div>}
-              <button onClick={handleLogin} disabled={loading || scanning} className={`w-full ${accentBtn} font-extrabold py-3.5 rounded-xl active:scale-95 transition-transform disabled:opacity-60`}>
+              <button onClick={handleLogin} disabled={loading} className={`w-full ${accentBtn} font-extrabold py-3.5 rounded-xl active:scale-95 transition-transform disabled:opacity-60`}>
                 {loading ? "Connexion…" : "Se connecter"}
               </button>
               <button onClick={() => reset("choose")} className="w-full text-muted-foreground font-semibold text-sm py-2 flex items-center justify-center gap-1.5"><ArrowLeft className="w-4 h-4" /> Retour</button>
