@@ -76,9 +76,20 @@ export default function MessageDetail({ message, userId, onBack, onLike, onDisli
             <button onClick={() => onDislike(message.id)} className={`flex items-center gap-1 font-semibold ${disliked ? "text-destructive" : "text-muted-foreground"}`}>
               <ThumbsDown className={`w-4 h-4 ${disliked ? "fill-current" : ""}`} /> {message.dislikes}
             </button>
-            <button onClick={() => onReport(message.id)} className="text-muted-foreground/50 hover:text-destructive ml-auto">
-              <Flag className="w-3.5 h-3.5" />
-            </button>
+            <div className="ml-auto flex items-center gap-3">
+              {!isMine && (
+                <button
+                  onClick={() => { if (!reported) { onReportUser(message.authorId, message.author); setReported(true); } }}
+                  disabled={reported}
+                  className={`flex items-center gap-1 text-xs font-semibold ${reported ? "text-muted-foreground/40" : "text-muted-foreground/60 hover:text-destructive"}`}
+                >
+                  <ShieldAlert className="w-3.5 h-3.5" /> {reported ? "Signalé" : "Signaler le compte"}
+                </button>
+              )}
+              <button onClick={() => onReport(message.id)} className="text-muted-foreground/50 hover:text-destructive">
+                <Flag className="w-3.5 h-3.5" />
+              </button>
+            </div>
           </div>
         </div>
 
