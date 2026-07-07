@@ -48,6 +48,7 @@ export default function Index() {
       {/* Identity creation (email + username + password) */}
       <IdentitySetup
         open={showIdentity}
+        deviceUserId={store.user.id}
         onSubmit={(username, email) => {
           store.saveIdentity(username, email);
           toast({ title: "Bienvenue ✅", description: "Tu restes anonyme publiquement." });
