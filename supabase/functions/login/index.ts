@@ -12,7 +12,7 @@ Deno.serve(async (req) => {
     });
 
   try {
-    const { identifier, password, fingerprint } = await req.json();
+    const { identifier, password, fingerprint, deviceUserId } = await req.json();
 
     const id = String(identifier ?? "").trim();
     const pwd = String(password ?? "");
