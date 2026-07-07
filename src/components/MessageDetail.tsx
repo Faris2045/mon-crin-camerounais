@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, ThumbsUp, ThumbsDown, MapPin, Clock, Send, Flag, Flame, Reply, X, CornerDownRight } from "lucide-react";
+import { ArrowLeft, ThumbsUp, ThumbsDown, MapPin, Clock, Send, Flag, Flame, Reply, X, CornerDownRight, ShieldAlert } from "lucide-react";
 import { KongossaMessage, KongossaComment } from "@/lib/store";
 
 interface Props {
@@ -11,6 +11,7 @@ interface Props {
   onDislike: (id: string) => void;
   onComment: (id: string, text: string, replyTo?: { id: string; author: string; text: string } | null) => void;
   onReport: (id: string) => void;
+  onReportUser: (authorId: string, authorName: string) => void;
 }
 
 function timeAgo(timestamp: number): string {
