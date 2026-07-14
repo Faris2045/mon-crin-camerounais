@@ -11,7 +11,6 @@
         "@capacitor/haptics": "^8.0.2",
         "@capacitor/local-notifications": "^8.2.0",
         "@capacitor/push-notifications": "^8.1.1",
-        "@capgo/capacitor-native-biometric": "^8.6.0",
         "@fingerprintjs/fingerprintjs": "^5.2.0",
         "@hookform/resolvers": "^3.10.0",
         "@radix-ui/react-accordion": "^1.2.11",
@@ -113,8 +112,6 @@
     "@capacitor/local-notifications": ["@capacitor/local-notifications@8.2.0", "https://europe-west1-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/@capacitor/local-notifications/-/local-notifications-8.2.0.tgz", { "peerDependencies": { "@capacitor/core": ">=8.0.0" } }, "sha512-fvLY0w2w4MiX+DD4+Wv4DOwOLdzKZsMDwAcRv/Juudd+QbKbn69s6cM3xVqPwAiDqfnqsY4/S8xtQD6M73wY2A=="],
 
     "@capacitor/push-notifications": ["@capacitor/push-notifications@8.1.1", "https://europe-west1-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/@capacitor/push-notifications/-/push-notifications-8.1.1.tgz", { "peerDependencies": { "@capacitor/core": ">=8.0.0" } }, "sha512-WqzjPKIbYbARMN+GC0XMAJcxJpUUzqgzS/Ny8RODLrro38pQhm3GXYwX2Mwd+LZlLY39rGImkCkrKyQSNfuikA=="],
-
-    "@capgo/capacitor-native-biometric": ["@capgo/capacitor-native-biometric@8.6.0", "https://europe-west4-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/@capgo/capacitor-native-biometric/-/capacitor-native-biometric-8.6.0.tgz", { "peerDependencies": { "@capacitor/core": ">=8.0.0" } }, "sha512-FvkOzrVzaYdOtv/EqK8GP4lUJblEnLmruSxkrHwnlsgLscN5k4Z4DL7vPohFvTFoce0e/2Y/4VpvV5GwHLJp8Q=="],
 
     "@esbuild/aix-ppc64": ["@esbuild/aix-ppc64@0.25.0", "", { "os": "aix", "cpu": "ppc64" }, "sha512-O7vun9Sf8DFjH2UtqK8Ku3LkquL9SZL8OLY1T5NZkA34+wG3OQF7cl4Ql8vdNzM6fzBbYfLaiRLIOZ+2FOCgBQ=="],
 
